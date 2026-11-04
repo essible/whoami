@@ -1665,10 +1665,32 @@ progress::-moz-progress-bar {
   color: var(--muted);
 }
 
+/*
+  Screenshots. A caption goes in italics on the line right below the image (same paragraph):
+    ![What the screenshot shows](./burp-repeater.png)
+    *The caption.*
+*/
+.prose p:has(> img) {
+  margin-block: 1.75rem;
+}
+
 .prose img {
+  display: block;
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  margin-inline: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.prose p:has(> img) > em {
+  display: block;
+  margin-top: 0.65rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-style: normal;
+  text-align: center;
 }
 
 .prose table {

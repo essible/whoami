@@ -16,9 +16,17 @@ npm run build    # production build in dist/, drafts excluded
 
 ## Add a writeup
 
-1. Copy `templates/writeup.md` into `src/content/writeups/`. The file name becomes the URL, e.g. `sqli-where-clause.md` → `/writeups/sqli-where-clause/`.
-2. Fill in the front matter and the sections.
-3. Set `draft: false` to publish. Drafts only show up in `npm run dev`.
+**From the browser, with no setup:** follow [docs/publishing.md](docs/publishing.md). It covers
+writing, adding screenshots and checking the build, plus a screenshot privacy checklist.
+
+**Locally:** create `src/content/writeups/<name>/index.md` from `templates/writeup.md`, put its
+screenshots in the same folder, and preview with `npm run dev`. The folder name becomes the
+address, e.g. `sqli-where-clause/index.md` → `/writeups/sqli-where-clause/`. Set `draft: false`
+to publish.
+
+Screenshots are turned into WebP files in several sizes at build time, and their metadata is
+dropped from the published copies. The originals in the repository keep theirs, so strip it
+before committing (see the checklist).
 
 The Writeups page and menu link appear automatically once the first writeup is published.
 
@@ -26,7 +34,8 @@ Before publishing:
 
 - Only write up retired machines and finished events. Platforms ban spoilers for active ones.
 - Never publish OverTheWire passwords or flags that a platform asks you to keep private.
-- This repository is public, including its history. Don't commit drafts that you can't publish.
+- This repository is public, including its history: drafts and original image files too. Commit a
+  writeup only when it's ready to publish.
 
 ## Edit the profile
 

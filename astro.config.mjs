@@ -1,4 +1,21 @@
 import { defineConfig } from 'astro/config';
+import { satteri } from '@astrojs/markdown-satteri';
+
+/**
+ * Images in writeups are never wider than the text column (42rem). Telling the browser so
+ * (the `sizes` attribute) lets it download a smaller file instead of one sized for the screen.
+ */
+const writeupImageSizes = {
+  name: 'writeup-image-sizes',
+  element: {
+    filter: ['img'],
+    visit(node, ctx) {
+      if (!node.properties?.sizes) {
+        ctx.setProperty(node, 'sizes', '(min-width: 44.5rem) 42rem, calc(100vw - 2.5rem)');
+      }
+    },
+  },
+};
 
 export default defineConfig({
   site: 'https://essible.pages.dev',
@@ -6,9 +23,14 @@ export default defineConfig({
     // Keep all CSS in external files so the Content-Security-Policy can stay strict.
     inlineStylesheets: 'never',
   },
+  image: {
+    // Images get several widths (srcset), converted to WebP; the build also drops their metadata.
+    layout: 'constrained',
+  },
   markdown: {
     // Prism marks tokens with classes; the default highlighter uses inline styles, which the CSP blocks.
     syntaxHighlight: 'prism',
+    processor: satteri({ hastPlugins: [writeupImageSizes] }),
   },
   devToolbar: {
     enabled: false,

@@ -8,7 +8,10 @@ tags: ['sql-injection']
 draft: true
 ---
 
-This file is a template. Drafts only show up in `npm run dev`, never on the live site. Copy this file, give it a new name (the file name becomes the URL), fill it in, and set `draft: false` to publish.
+Delete this paragraph. Save the writeup as `src/content/writeups/your-lab-name/index.md`: the folder
+name becomes the address, and screenshots go in the same folder. Set `draft: false` to publish.
+A draft is hidden on the site but visible on GitHub, because the repository is public.
+The steps and the screenshot privacy checklist are in `docs/publishing.md`.
 
 ## Summary
 
@@ -25,6 +28,13 @@ The steps you took, with the requests and payloads that mattered.
 ```http
 GET /filter?category=Gifts'+OR+1=1-- HTTP/2
 Host: <lab-id>.web-security-academy.net
+```
+
+To show a screenshot from this folder, with an optional caption in italics on the next line:
+
+```md
+![Burp Repeater: the request with the payload, and every product in the response](./burp-repeater.png)
+*The payload in Burp Repeater.*
 ```
 
 ## Fix
