@@ -1,0 +1,40 @@
+---
+import { formatDate, isoDate, levelOf, readingMinutes, type Writeup } from '../lib/writeups';
+
+interface Props {
+  writeups: Writeup[];
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { writeups, headingLevel = 'h3' } = Astro.props;
+const Heading = headingLevel;
+---
+
+<ul class="findings">
+  {
+    writeups.map((w) => (
+      <li class="finding">
+        <p class="finding-meta">
+          {w.data.difficulty && (
+            <span class:list={['level', `level-${levelOf(w.data.difficulty)}`]}>{w.data.difficulty}</span>
+          )}
+          <span>{w.data.platform}</span>
+          <time datetime={isoDate(w.data.date)}>{formatDate(w.data.date)}</time>
+          <span>{readingMinutes(w.body)} min read</span>
+          {w.data.draft && <span class="level level-draft">Draft</span>}
+        </p>
+        <Heading class="finding-title">
+          <a href={`/writeups/${w.id}/`}>{w.data.title}</a>
+        </Heading>
+        <p class="finding-summary">{w.data.description}</p>
+        {w.data.tags.length > 0 && (
+          <p class="tags">
+            {w.data.tags.map((tag) => (
+              <span>#{tag}</span>
+            ))}
+          </p>
+        )}
+      </li>
+    ))
+  }
+</ul>

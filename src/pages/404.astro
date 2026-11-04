@@ -1,0 +1,42 @@
+---
+import Base from '../layouts/Base.astro';
+import Glyphs from '../components/Glyphs.astro';
+import Spotlight from '../components/Spotlight.astro';
+import Repeater from '../components/Repeater.astro';
+import { markupLines, type Endpoint } from '../lib/http';
+
+// The response to a missing page is this page, so the panel shows the start of its own source.
+const notFound: Endpoint = {
+  id: 'missing',
+  path: '/this-page',
+  status: 404,
+  statusText: 'Not Found',
+  headers: [
+    { name: 'content-type', value: 'text/html; charset=utf-8' },
+    { name: 'x-frame-options', value: 'DENY' },
+  ],
+  body: markupLines(['<!DOCTYPE html>', '<html lang="en">', '<title>Not found · essible</title>', '…']),
+};
+---
+
+<Base title="Not found" description="This page doesn't exist." noindex>
+  <section class="hero has-spot" aria-labelledby="hero-title">
+    <div class="hero-scan" aria-hidden="true"></div>
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Error 404</p>
+        <h1 id="hero-title" class="handle handle-small"><Glyphs text="Not found" /><span class="caret" aria-hidden="true"></span></h1>
+        <p class="intro">The page you asked for doesn't exist.</p>
+        <ul class="actions">
+          <li>
+            <a class="button button-primary" href="/">
+              Go to the home page<span class="button-arrow" aria-hidden="true">→</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <Repeater host="essible.pages.dev" endpoints={[notFound]} />
+    </div>
+    <Spotlight />
+  </section>
+</Base>

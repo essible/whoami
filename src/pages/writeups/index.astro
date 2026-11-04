@@ -1,0 +1,28 @@
+---
+import Base from '../../layouts/Base.astro';
+import Findings from '../../components/Findings.astro';
+import { getWriteups } from '../../lib/writeups';
+
+const writeups = await getWriteups();
+---
+
+<Base title="Writeups" description="Writeups on web application security and penetration testing labs.">
+  <header class="page-head">
+    <div class="wrap">
+      <p class="eyebrow">/writeups</p>
+      <h1 class="page-title">Writeups</h1>
+      <p class="page-summary">How each vulnerability works, how I exploited it in a lab, and how to fix it.</p>
+    </div>
+  </header>
+  <section class="section">
+    <div class="wrap">
+      {
+        writeups.length > 0 ? (
+          <Findings writeups={writeups} headingLevel="h2" />
+        ) : (
+          <p class="muted">Nothing published yet.</p>
+        )
+      }
+    </div>
+  </section>
+</Base>

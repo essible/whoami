@@ -1,0 +1,72 @@
+---
+/**
+ * A small HTTP "repeater". Each tab is a radio button; picking one plays its exchange once
+ * (the request line types out, the request is sent, the response prints), in CSS only.
+ * Panes are stacked in one grid cell, so switching tabs never changes the panel's size.
+ * With a single endpoint there are no tabs and the panel is decorative.
+ */
+import type { Endpoint } from '../lib/http';
+
+interface Props {
+  host: string;
+  endpoints: Endpoint[];
+  /** Accessible name of the group of tabs. */
+  label?: string;
+}
+
+const { host, endpoints, label = 'Requests' } = Astro.props;
+const many = endpoints.length > 1;
+const Root = many ? 'fieldset' : 'div';
+const bytes = new Intl.NumberFormat('en');
+---
+
+<Root class="repeater" aria-hidden={many ? undefined : 'true'}>
+  {many && <legend class="sr-only">{label}</legend>}
+  {
+    many && (
+      <div class="ep-tabs">
+        {endpoints.map((ep) => (
+          <label class="ep-tab" for={`ep-${ep.id}`}>{ep.label ?? ep.path}</label>
+        ))}
+      </div>
+    )
+  }
+  <div class="ep-panes">
+    {
+      endpoints.map((ep, i) => (
+        <>
+          {many && <input class="ep-input sr-only" type="radio" name="endpoint" id={`ep-${ep.id}`} checked={i === 0} />}
+          <div class="ep-pane">
+            <div class="repeater-bar">
+              <span>Request</span>
+              <span>HTTP/2</span>
+            </div>
+            <pre class="repeater-pane repeater-request"><code>
+              <span class="ln"><span class="typed"><span class="m">{ep.method ?? 'GET'}</span> <span class="t">{ep.path}</span> <span class="v">HTTP/2</span></span><span class="cursor" /></span>
+              <span class="ln ln-host"><span class="h">Host:</span> {host}</span>
+            </code></pre>
+            <div class="repeater-bar repeater-bar-response">
+              <span>Response</span>
+              <span class="bar-status">
+                <span class="pending">waiting…</span>
+                <span class:list={['repeater-status', ep.status < 400 ? 'is-ok' : 'is-error']}>{ep.status} {ep.statusText}</span>
+              </span>
+            </div>
+            <pre class="repeater-pane repeater-response"><code>
+              <span class="ln"><span class="v">HTTP/2</span> <span class={ep.status < 400 ? 's' : 'e'}>{ep.status} {ep.statusText}</span></span>
+              {(ep.headers ?? []).map((h) => <span class="ln"><span class="h">{h.name}:</span> {h.value}</span>)}
+              {ep.body && <span class="ln">{'\u00a0'}</span>}
+              {ep.body?.map((line) => (
+                <span class="ln">{line.map((t) => (t.cls ? <span class={t.cls}>{t.text}</span> : t.text))}</span>
+              ))}
+            </code></pre>
+            <div class="repeater-foot">
+              <span class="foot-done">Done</span>
+              {ep.bytes !== undefined && <span>{bytes.format(ep.bytes)} bytes</span>}
+            </div>
+          </div>
+        </>
+      ))
+    }
+  </div>
+</Root>

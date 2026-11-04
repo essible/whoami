@@ -1,0 +1,16 @@
+---
+/**
+ * Splits a short heading into letters so CSS can animate their weight one after another.
+ * Screen readers get the plain text; the letters are hidden from them. Words never break
+ * in the middle, and each letter carries its position (g0, g1, …) for the stagger.
+ */
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+let n = 0;
+const words = text.split(' ').map((word) => [...word].map((ch) => ({ ch, i: n++ })));
+---
+
+<span class="sr-only">{text}</span><span class="glyphs" aria-hidden="true">{words.map((word, w) => <>{w > 0 && ' '}<span class="word">{word.map(({ ch, i }) => <span class={`glyph g${i}`}>{ch}</span>)}</span></>)}</span>

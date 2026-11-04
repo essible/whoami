@@ -1,0 +1,183 @@
+---
+import Base from '../layouts/Base.astro';
+import Findings from '../components/Findings.astro';
+import Glyphs from '../components/Glyphs.astro';
+import Spotlight from '../components/Spotlight.astro';
+import Repeater from '../components/Repeater.astro';
+import { heroEndpoints } from '../data/api';
+import { path, profile, toolkit, type PathStatus } from '../data/profile';
+import { getWriteups } from '../lib/writeups';
+
+const writeups = (await getWriteups()).slice(0, 4);
+const endpoints = await heroEndpoints();
+const now = path.find((item) => item.status === 'active');
+const statusLabel: Record<PathStatus, string> = {
+  done: 'Completed',
+  active: 'In progress',
+  paused: 'Paused',
+  next: 'Up next',
+};
+---
+
+<Base>
+  <section class="hero has-spot" aria-labelledby="hero-title">
+    <div class="hero-scan" aria-hidden="true"></div>
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          {
+            profile.focusAreas.map((area, i) => (
+              <>
+                {i > 0 && <span aria-hidden="true"> · </span>}
+                <span class="nowrap">{area}</span>
+              </>
+            ))
+          }
+        </p>
+        <h1 id="hero-title" class="handle"><Glyphs text={profile.handle} /><span class="caret" aria-hidden="true"></span></h1>
+        <p class="intro">{profile.intro}</p>
+        <ul class="actions">
+          {
+            writeups.length > 0 ? (
+              <>
+                <li>
+                  <a class="button button-primary" href="/writeups/">
+                    Read writeups<span class="button-arrow" aria-hidden="true">→</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="button" href="#contact">
+                    Contact<span class="button-arrow is-down" aria-hidden="true">↓</span>
+                  </a>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <a class="button button-primary" href="#contact">
+                    Contact<span class="button-arrow is-down" aria-hidden="true">↓</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="button" href={profile.github}>
+                    GitHub<span class="button-arrow is-out" aria-hidden="true">↗</span>
+                  </a>
+                </li>
+              </>
+            )
+          }
+        </ul>
+      </div>
+      <Repeater host="essible.pages.dev" endpoints={endpoints} label="Requests to this site" />
+    </div>
+    <Spotlight />
+  </section>
+
+  {
+    writeups.length > 0 && (
+      <section class="section" id="writeups" aria-labelledby="writeups-title">
+        <div class="wrap">
+          <header class="section-head">
+            <p class="section-path">
+              <span aria-hidden="true">/</span>writeups
+            </p>
+            <h2 id="writeups-title" class="section-title">Latest writeups</h2>
+          </header>
+          <Findings writeups={writeups} />
+          <p class="more"><a href="/writeups/">All writeups</a></p>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section" id="progress" aria-labelledby="progress-title">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="section-path"><span aria-hidden="true">/</span>progress</p>
+        <h2 id="progress-title" class="section-title">What I'm working on</h2>
+      </header>
+      <div class="bento">
+        {
+          now && (
+            <div class="tile tile-now">
+              <p class="tile-label">
+                <span class="live-dot" aria-hidden="true" />
+                Now
+              </p>
+              <h3 class="now-title">
+                <a href={now.url}>{now.name}</a>
+              </h3>
+              <p class="now-meta">
+                {now.platform}
+                {now.detail && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    {now.detail}
+                  </>
+                )}
+              </p>
+              {typeof now.value === 'number' && (
+                <progress max="100" value={now.value} aria-label={`${now.name}: ${now.detail ?? `${now.value}%`}`}>
+                  {now.value}%
+                </progress>
+              )}
+            </div>
+          )
+        }
+        <div class="tile tile-toolkit">
+          <p class="tile-label">Toolkit</p>
+          <dl class="toolkit">
+            {
+              toolkit.map((group) => (
+                <div>
+                  <dt>{group.group}</dt>
+                  <dd>
+                    <ul class="chips">
+                      {group.items.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+        </div>
+        <div class="tile tile-path">
+          <p class="tile-label">Learning path</p>
+          <ol class="path">
+            {
+              path.map((item) => (
+                <li class:list={['path-step', `is-${item.status}`]}>
+                  <span class="path-node" aria-hidden="true" />
+                  <a class="path-name" href={item.url}>
+                    {item.name}
+                  </a>
+                  <span class="path-meta">{item.platform.split(' ')[0]}</span>
+                  <span class="path-status">
+                    {item.status === 'paused' && item.detail
+                      ? `${statusLabel.paused} · ${item.detail}`
+                      : statusLabel[item.status]}
+                  </span>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="contact-band has-spot" id="contact" aria-labelledby="contact-title">
+    <div class="wrap contact-inner">
+      <p class="section-path"><span aria-hidden="true">/</span>contact</p>
+      <h2 id="contact-title" class="contact-title"><Glyphs text="Get in touch" /></h2>
+      <p class="contact-lede">Questions about a writeup, feedback, or an opportunity? Email me.</p>
+      <a class="contact-email" href={`mailto:${profile.email}`}>
+        {profile.email}<span class="contact-arrow" aria-hidden="true">→</span>
+      </a>
+      <p class="contact-alt">or find me on <a href={profile.github}>GitHub</a></p>
+    </div>
+    <Spotlight />
+  </section>
+</Base>

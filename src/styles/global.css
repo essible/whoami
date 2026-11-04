@@ -1,0 +1,2840 @@
+/*
+  Layout: a full-width hero with an HTTP request/response panel; a status board of tiles
+  (now, toolkit, learning path); a bold contact band that mirrors the hero.
+  Dark only, like a terminal; print gets dark ink on white (see the print tokens).
+  Almost no JavaScript: the only script (/copy.js, writeups only) adds copy buttons to code.
+  The panel's tabs are radio buttons, motion is CSS, and scroll effects use scroll-driven
+  animations where the browser supports them.
+*/
+
+:root {
+  color-scheme: dark;
+
+  --bg: #0b0a0a;
+  --surface: #141212;
+  --line: #252121;
+  --line-strong: #393232;
+  --text: #f2eeee;
+  --muted: #a59c9c;
+  --accent: #e8453c;
+  --accent-strong: #ff5a4f;
+  --on-accent: #ffffff;
+  /* Deep red for solid fills behind white text (buttons, selection); --accent stays bright for text and lines. */
+  --accent-fill: #9f1d1d;
+  --accent-fill-strong: #b42323;
+  --dot: rgb(165 156 156 / 0.16);
+  --glow: rgb(150 18 18 / 0.5);
+  --highlight: rgb(255 255 255 / 0.035);
+  --grain: #ffffff;
+  --grain-opacity: 0.05;
+  --done: #4ade80;
+  --low: #4ade80;
+  --medium: #f5c451;
+  --high: #c084fc;
+
+  --code-accent: #e8453c;
+  --code-scan: rgb(232 69 60 / 0.07);
+  --code-bg: #0e0c0c;
+  --code-bar: #161313;
+  --code-line: #2a2424;
+  --code-text: #ece7e7;
+  --code-muted: #9c9292;
+  --syn-method: #c4b5fd;
+  --syn-target: #7dd3fc;
+  --syn-header: #e8453c;
+  --syn-ok: #86efac;
+  --syn-error: #ff5a4f;
+  --syn-string: #fde68a;
+  --syn-number: #fdba74;
+  --syn-function: #93c5fd;
+
+  --font-display: 'Martian Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --wide: 72rem;
+  --measure: 42rem;
+  --header-h: 4rem;
+  --code-bar-h: 2rem;
+}
+
+/* Dark only, by design. Paper is white, so printing (and Save as PDF) switches to dark ink. */
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --line: #ecdfe1;
+    --line-strong: #d8c5c8;
+    --text: #1c1214;
+    --muted: #6a575b;
+    --accent: #b4182b;
+    --accent-strong: #8f1222;
+    --on-accent: #ffffff;
+    --accent-fill: #b4182b;
+    --accent-fill-strong: #8f1222;
+    --dot: transparent;
+    --glow: transparent;
+    --highlight: transparent;
+    --done: #15803d;
+    --low: #15803d;
+    --medium: #8a5a00;
+    --high: #7e22ce;
+
+    --code-accent: #b4182b;
+    --code-scan: transparent;
+    --code-bg: #ffffff;
+    --code-bar: #f7f2f2;
+    --code-line: #ecdfe1;
+    --code-text: #1c1214;
+    --code-muted: #6a575b;
+    --syn-method: #5b21b6;
+    --syn-target: #0369a1;
+    --syn-header: #9f1239;
+    --syn-ok: #15803d;
+    --syn-error: #b91c1c;
+    --syn-string: #854d0e;
+    --syn-number: #9a3412;
+    --syn-function: #1d4ed8;
+  }
+}
+
+/* Base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scrollbar-color: var(--line-strong) var(--bg);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 1.0625rem/1.7 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+/* On a page that is only a hero (the 404), the hero fills the screen instead of leaving a gap. */
+main > .hero:only-child {
+  display: grid;
+  flex: 1;
+  align-content: center;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--wide);
+  margin-inline: auto;
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--accent-strong);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+::selection {
+  background: var(--accent-fill);
+  color: var(--on-accent);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Anchored sections stop below the sticky header. */
+section[id] {
+  scroll-margin-top: var(--header-h);
+}
+
+/* Film grain over everything, very faint. It also breaks up banding in the glows. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--grain);
+  opacity: var(--grain-opacity);
+  -webkit-mask-image: url('/grain.svg');
+  mask-image: url('/grain.svg');
+  pointer-events: none;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 60;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  background: var(--accent-fill);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* Header */
+
+/* Sticky and frosted. Over the top of the page it is clear (see the scroll-driven section). */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  view-transition-name: site-header;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .site-header {
+    background: var(--bg);
+  }
+}
+
+.header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
+  min-height: var(--header-h);
+  padding-block: 0.5rem;
+}
+
+/* Reading progress on writeups, a thin line along the bottom of the header. */
+.read-progress {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  display: none;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 0 10px var(--glow);
+  transform-origin: 0 50%;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+
+.wordmark:hover {
+  color: var(--text);
+}
+
+.wordmark-mark {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.site-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.site-nav a {
+  display: inline-block;
+  padding-block: 0.35rem;
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat 0 100% / 0 2px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    background-size 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current='page'] {
+  background-size: 100% 2px;
+  color: var(--text);
+}
+
+/* Hero, and the textured background it shares with the contact band */
+
+.hero,
+.contact-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/*
+  The hero runs up under the header, which is clear at the top of the page. It reaches 4rem
+  higher than the header's usual height, so its background still fills the header when the
+  menu wraps onto extra rows on narrow screens. The part above the page is never visible.
+*/
+.hero {
+  --bleed: calc(var(--header-h) + 4rem);
+  margin-top: calc(-1 * var(--bleed));
+  padding-top: var(--bleed);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Pointer spotlight (desktop only, see the motion section). Registered so its position can glide. */
+@property --spot-x {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+
+@property --spot-y {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 40%;
+}
+
+.spot-hits {
+  display: none;
+}
+
+/* Red dots on the same grid, revealed by a band that sweeps down once on load. */
+.hero-scan {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: none;
+  background-image:
+    radial-gradient(var(--accent) 1.25px, transparent 1.75px),
+    linear-gradient(to bottom, transparent, color-mix(in srgb, var(--accent) 7%, transparent) 50%, transparent);
+  background-size:
+    24px 24px,
+    100% 100%;
+  pointer-events: none;
+}
+
+.hero::before,
+.contact-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent);
+  mask-image: linear-gradient(to bottom, #000 35%, transparent);
+}
+
+.hero::after,
+.contact-band::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 48rem;
+  height: 48rem;
+  background: radial-gradient(closest-side, var(--glow), transparent);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* On screens wider than the content, the glows follow the content instead of the screen edge. */
+.hero::after {
+  top: -8rem;
+  right: max(-14rem, calc((100% - var(--wide)) / 2 - 24rem));
+}
+
+.hero-inner {
+  display: grid;
+  align-items: center;
+  gap: 2.75rem;
+  padding-block: clamp(3rem, 8vw, 5.5rem);
+}
+
+.eyebrow {
+  margin: 0 0 1.25rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.handle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 11vw, 5.25rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.07em;
+}
+
+.handle-small {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+}
+
+.glyphs .word {
+  white-space: nowrap;
+}
+
+.g1 { --g: 1; }
+.g2 { --g: 2; }
+.g3 { --g: 3; }
+.g4 { --g: 4; }
+.g5 { --g: 5; }
+.g6 { --g: 6; }
+.g7 { --g: 7; }
+.g8 { --g: 8; }
+.g9 { --g: 9; }
+.g10 { --g: 10; }
+.g11 { --g: 11; }
+.g12 { --g: 12; }
+.g13 { --g: 13; }
+.g14 { --g: 14; }
+.g15 { --g: 15; }
+
+.caret {
+  display: inline-block;
+  width: 0.5ch;
+  height: 0.82em;
+  margin-left: 0.12em;
+  vertical-align: -0.05em;
+  background: var(--accent);
+}
+
+.intro {
+  max-width: 36rem;
+  margin: 1.5rem 0 0;
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  overflow: hidden;
+  padding: 0.7rem 1.15rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.2s,
+    color 0.15s;
+}
+
+.button:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.button-primary {
+  border-color: var(--accent-fill);
+  background: var(--accent-fill);
+  color: var(--on-accent);
+}
+
+.button-primary:hover {
+  border-color: var(--accent-fill-strong);
+  background: var(--accent-fill-strong);
+  box-shadow: 0 0 28px -6px var(--glow);
+  color: var(--on-accent);
+}
+
+.button-arrow {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* A soft highlight that sweeps across the primary button on hover (motion section). */
+.button-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 30%, rgb(255 255 255 / 0.3) 50%, transparent 70%);
+  transform: translateX(-110%);
+  pointer-events: none;
+}
+
+/* Request/response panel. Tabs are radio buttons; the panes stack in one grid cell. */
+
+.repeater {
+  position: relative;
+  min-width: 0;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--code-line);
+  border-radius: 12px;
+  background: var(--code-bg);
+  box-shadow:
+    0 30px 60px -35px rgb(0 0 0 / 0.65),
+    0 0 90px -45px var(--glow);
+  color: var(--code-text);
+  font-family: var(--font-mono);
+  font-size: clamp(0.71875rem, 0.6rem + 0.6vw, 0.8125rem);
+  line-height: 1.7;
+  container-type: inline-size;
+}
+
+/* Faint scanlines, static. */
+.repeater::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.022) 0 1px, transparent 1px 3px);
+  pointer-events: none;
+}
+
+/* No scrolling here: a scroll box would become an extra keyboard stop. Narrow panels use two columns. */
+.ep-tabs {
+  display: flex;
+  overflow: hidden;
+  border-bottom: 1px solid var(--code-line);
+  background: var(--code-bar);
+}
+
+.ep-tab {
+  --on: 0;
+  position: relative;
+  flex: none;
+  padding: 0.6rem 0.95rem;
+  border-right: 1px solid var(--code-line);
+  background: var(--code-bar);
+  color: var(--code-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+}
+
+.ep-tab:hover {
+  color: var(--code-text);
+}
+
+.ep-tab::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--code-accent);
+  box-shadow: 0 0 10px var(--code-accent);
+  transform: scaleX(var(--on));
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* The checked radio's tab. The radios sit next to their panes, so tabs match by position. */
+.repeater:has(.ep-input:nth-of-type(1):checked) .ep-tab:nth-child(1),
+.repeater:has(.ep-input:nth-of-type(2):checked) .ep-tab:nth-child(2),
+.repeater:has(.ep-input:nth-of-type(3):checked) .ep-tab:nth-child(3),
+.repeater:has(.ep-input:nth-of-type(4):checked) .ep-tab:nth-child(4),
+.repeater:has(.ep-input:nth-of-type(5):checked) .ep-tab:nth-child(5) {
+  --on: 1;
+  background: var(--code-bg);
+  color: var(--code-text);
+}
+
+/* Keyboard focus lands on the hidden radio, so show it on the tab. Arrow keys switch tabs. */
+.repeater:has(.ep-input:nth-of-type(1):focus-visible) .ep-tab:nth-child(1),
+.repeater:has(.ep-input:nth-of-type(2):focus-visible) .ep-tab:nth-child(2),
+.repeater:has(.ep-input:nth-of-type(3):focus-visible) .ep-tab:nth-child(3),
+.repeater:has(.ep-input:nth-of-type(4):focus-visible) .ep-tab:nth-child(4),
+.repeater:has(.ep-input:nth-of-type(5):focus-visible) .ep-tab:nth-child(5) {
+  outline: 2px solid var(--code-accent);
+  outline-offset: -2px;
+}
+
+.ep-panes {
+  display: grid;
+}
+
+/* Every pane takes the same cell, so the panel is as tall as the tallest one and never jumps. */
+.ep-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  grid-area: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+.ep-pane:only-child,
+.ep-input:checked + .ep-pane {
+  visibility: visible;
+}
+
+.repeater-bar,
+.repeater-foot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--code-bar);
+  color: var(--code-muted);
+  font-size: 0.6875rem;
+}
+
+.repeater-bar {
+  border-bottom: 1px solid var(--code-line);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.repeater-pane + .repeater-bar {
+  border-top: 1px solid var(--code-line);
+}
+
+.repeater-foot {
+  border-top: 1px solid var(--code-line);
+}
+
+.repeater-status.is-ok {
+  color: var(--syn-ok);
+}
+
+.repeater-status.is-error {
+  color: var(--syn-error);
+}
+
+.repeater-pane {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  white-space: normal;
+}
+
+.repeater-response {
+  flex: 1;
+}
+
+.repeater code {
+  font-family: inherit;
+}
+
+.repeater .ln {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.typed {
+  display: inline-block;
+  max-width: max-content;
+  overflow: hidden;
+  vertical-align: top;
+  white-space: pre;
+}
+
+.cursor {
+  display: none;
+}
+
+.bar-status {
+  display: grid;
+  justify-items: end;
+}
+
+.bar-status > * {
+  grid-area: 1 / 1;
+}
+
+.pending {
+  color: var(--code-muted);
+  opacity: 0;
+}
+
+.repeater .m {
+  color: var(--syn-method);
+  font-weight: 600;
+}
+
+.repeater .t {
+  color: var(--syn-target);
+}
+
+.repeater .v {
+  color: var(--code-muted);
+}
+
+.repeater .h,
+.repeater .k {
+  color: var(--syn-header);
+}
+
+.repeater .s {
+  color: var(--syn-ok);
+}
+
+.repeater .e {
+  color: var(--syn-error);
+}
+
+.repeater .str {
+  color: var(--syn-string);
+}
+
+.repeater .num {
+  color: var(--syn-number);
+}
+
+.repeater .lit {
+  color: var(--syn-method);
+}
+
+/* Narrow panels: the tabs form two columns instead of a row that would scroll. */
+@container (max-width: 30rem) {
+  .ep-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--code-line);
+  }
+
+  .ep-tab {
+    border-right: 0;
+    text-align: center;
+  }
+
+  .ep-tab:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .repeater-pane,
+  .repeater-bar,
+  .repeater-foot {
+    padding-inline: 0.8rem;
+  }
+}
+
+/* Sections */
+
+.section {
+  padding-block: clamp(3.5rem, 8vw, 6rem);
+}
+
+.section + .section {
+  border-top: 1px solid var(--line);
+}
+
+.section-head {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: clamp(1.75rem, 4vw, 2.75rem);
+}
+
+.section-path {
+  margin: 0;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.section-title {
+  margin: 0;
+  font-size: clamp(1.875rem, 4.5vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.more {
+  margin: 1.75rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+/* Status board */
+
+.bento {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.tile {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 var(--highlight);
+}
+
+.tile-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.live-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--medium);
+}
+
+.tile-now::after {
+  content: '';
+  position: absolute;
+  right: -25%;
+  bottom: -70%;
+  z-index: -1;
+  width: 75%;
+  aspect-ratio: 1;
+  background: radial-gradient(closest-side, var(--glow), transparent);
+  opacity: 0.7;
+}
+
+.now-title {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.06em;
+  line-height: 1.05;
+}
+
+.now-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.now-title a:hover {
+  color: var(--accent);
+}
+
+.now-meta {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.tile-now progress {
+  margin-top: auto;
+  padding-top: 0;
+}
+
+progress {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 0.5rem;
+  margin-top: 0.75rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line);
+  color: var(--accent);
+}
+
+progress::-webkit-progress-bar {
+  border-radius: 999px;
+  background: var(--line);
+}
+
+progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.toolkit {
+  display: grid;
+  gap: 1.1rem;
+  margin: 0.35rem 0 0;
+}
+
+.toolkit dt {
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.toolkit dd {
+  margin: 0;
+}
+
+/* Learning path: vertical on phones, a horizontal track on wider screens. */
+
+.path {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.path-step {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  padding-left: 2rem;
+}
+
+.path-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  top: 1.35rem;
+  bottom: -1.35rem;
+  left: 0.5rem;
+  width: 2px;
+  background: var(--line-strong);
+}
+
+.path-step.is-done:not(:last-child)::before {
+  background: var(--done);
+}
+
+.path-node {
+  position: absolute;
+  top: 0.3rem;
+  left: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.is-done .path-node {
+  border-color: var(--done);
+  background: var(--done);
+}
+
+/* A check mark drawn with two borders. */
+.is-done .path-node::after {
+  content: '';
+  position: absolute;
+  top: 0.12rem;
+  left: 0.3rem;
+  width: 0.28rem;
+  height: 0.5rem;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.is-active .path-node {
+  border-color: var(--medium);
+  background: conic-gradient(var(--medium) 0 50%, transparent 0);
+}
+
+.is-paused .path-node {
+  border-color: var(--medium);
+  border-style: dashed;
+}
+
+.path-name {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.path-name:hover {
+  color: var(--accent);
+}
+
+.is-next .path-name {
+  color: var(--muted);
+}
+
+.path-meta {
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.path-status {
+  margin-top: 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.is-done .path-status {
+  color: var(--done);
+}
+
+.is-active .path-status,
+.is-paused .path-status {
+  color: var(--medium);
+}
+
+.is-next .path-status {
+  color: var(--muted);
+}
+
+/* Contact band */
+
+.contact-band {
+  border-top: 1px solid var(--line);
+}
+
+.contact-band::before {
+  -webkit-mask-image: linear-gradient(to top, #000 30%, transparent);
+  mask-image: linear-gradient(to top, #000 30%, transparent);
+}
+
+.contact-band::after {
+  bottom: -18rem;
+  left: max(-16rem, calc((100% - var(--wide)) / 2 - 24rem));
+}
+
+.contact-inner {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+  padding-block: clamp(4rem, 11vw, 7.5rem);
+}
+
+.contact-title {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 9vw, 4.75rem);
+  font-weight: 700;
+  letter-spacing: -0.07em;
+  line-height: 1;
+}
+
+.contact-lede {
+  max-width: 34rem;
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+.contact-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  max-width: 100%;
+  margin-top: 1.25rem;
+  padding: 0.9rem 1.4rem;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 2.6vw, 1.375rem);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  transition:
+    background-color 0.15s,
+    box-shadow 0.2s,
+    color 0.15s;
+}
+
+.contact-email:hover {
+  background: var(--accent-fill);
+  box-shadow: 0 0 40px -10px var(--glow);
+  color: var(--on-accent);
+}
+
+.contact-arrow {
+  color: var(--accent);
+  transition: transform 0.2s;
+}
+
+.contact-email:hover .contact-arrow {
+  color: var(--on-accent);
+}
+
+.contact-alt {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+
+/* Writeup cards */
+
+.findings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finding {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 var(--highlight);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.2s;
+}
+
+.finding:hover {
+  border-color: var(--accent);
+  box-shadow:
+    inset 0 1px 0 var(--highlight),
+    0 18px 50px -30px var(--glow);
+}
+
+.finding:has(a:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.finding-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.9rem;
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.finding-title {
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.finding-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.finding-title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.finding-title a:focus-visible {
+  outline: none;
+}
+
+.finding-summary {
+  margin: 0;
+  color: var(--muted);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.level {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 14%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.level-low {
+  color: var(--low);
+}
+
+.level-medium,
+.level-draft {
+  color: var(--medium);
+}
+
+.level-high {
+  color: var(--high);
+}
+
+.level-neutral {
+  color: var(--muted);
+}
+
+/* Page headers and writeup pages */
+
+.page-head {
+  padding-block: clamp(2.5rem, 7vw, 4.5rem) clamp(2rem, 5vw, 3rem);
+  border-bottom: 1px solid var(--line);
+}
+
+.page-head + .section {
+  padding-top: clamp(2rem, 5vw, 3rem);
+}
+
+.page-title {
+  max-width: 48rem;
+  margin: 0;
+  font-size: clamp(2.125rem, 5.5vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.page-summary {
+  max-width: var(--measure);
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+.back {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--accent);
+}
+
+.doc-body {
+  display: grid;
+  gap: 2rem;
+  padding-block: 2.5rem 1rem;
+}
+
+.facts dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 1rem 1.5rem;
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  margin: 0.35rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+/* Long-form writeup text */
+
+.prose {
+  min-width: 0;
+  max-width: var(--measure);
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose :is(h2, h3) {
+  scroll-margin-top: calc(var(--header-h) + 1.5rem);
+}
+
+/* End of a writeup: a note asking for corrections, then the newer and older writeups. */
+
+.doc-main {
+  min-width: 0;
+  max-width: var(--measure);
+}
+
+.doc-end {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+
+.doc-feedback {
+  margin: 0;
+  color: var(--muted);
+}
+
+.pager {
+  display: grid;
+  gap: 1rem;
+}
+
+.pager-link {
+  display: grid;
+  align-content: start;
+  gap: 0.35rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 var(--highlight);
+  color: var(--text);
+  text-decoration: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.2s;
+}
+
+.pager-link:hover {
+  border-color: var(--accent);
+  box-shadow:
+    inset 0 1px 0 var(--highlight),
+    0 18px 50px -30px var(--glow);
+  color: var(--text);
+}
+
+.pager-dir {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pager-arrow {
+  display: inline-block;
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pager-title {
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+@media (min-width: 40rem) {
+  .pager {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pager-link.is-older {
+    grid-column: 2;
+    text-align: right;
+  }
+}
+
+/* "On this page" list, shown on screens where the side rail is hidden. */
+
+.contents {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.contents-title {
+  margin: 0 0 0.6rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contents ol {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contents a {
+  display: inline-block;
+  padding-block: 0.2rem;
+  color: var(--text);
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+
+.contents a:hover {
+  color: var(--accent);
+}
+
+.contents .depth-3 {
+  padding-left: 0.85rem;
+}
+
+/* Side rail: one dash per section; hovering or focusing it reveals the titles. */
+
+.rail {
+  display: none;
+}
+
+.rail ol {
+  display: grid;
+  justify-items: end;
+  margin: 0;
+  padding: 0.5rem 0;
+  list-style: none;
+}
+
+.rail a {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.35rem 0 0.35rem 0.75rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.rail-dash {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--line-strong);
+  transition:
+    width 0.2s,
+    background-color 0.2s;
+}
+
+.rail .depth-3 .rail-dash {
+  width: 0.6rem;
+}
+
+.rail-label {
+  max-width: 18rem;
+  overflow: hidden;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 10px 30px -14px rgb(0 0 0 / 0.5);
+  color: var(--muted);
+  font-size: 0.8125rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
+  transition:
+    opacity 0.15s,
+    transform 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.rail:hover .rail-label,
+.rail:focus-within .rail-label {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.rail a:hover .rail-label,
+.rail a:focus-visible .rail-label {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.rail a:hover .rail-dash,
+.rail a:focus-visible .rail-dash {
+  width: 1.5rem;
+  background: var(--accent);
+}
+
+.rail a:focus-visible {
+  outline: none;
+}
+
+@media (min-width: 75rem) and (hover: hover) and (pointer: fine) {
+  .rail {
+    position: fixed;
+    top: 50%;
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    z-index: 10;
+    display: block;
+    transform: translateY(-50%);
+  }
+
+  .doc .contents {
+    display: none;
+  }
+}
+
+/* Where supported, the dash of every section heading that is on screen lights up while you read. */
+@supports (timeline-scope: --s1) {
+  .doc {
+    timeline-scope: --s1, --s2, --s3, --s4, --s5, --s6, --s7, --s8, --s9, --s10, --s11, --s12;
+  }
+
+  .prose > :nth-child(1 of h2, h3) { view-timeline-name: --s1; }
+  .prose > :nth-child(2 of h2, h3) { view-timeline-name: --s2; }
+  .prose > :nth-child(3 of h2, h3) { view-timeline-name: --s3; }
+  .prose > :nth-child(4 of h2, h3) { view-timeline-name: --s4; }
+  .prose > :nth-child(5 of h2, h3) { view-timeline-name: --s5; }
+  .prose > :nth-child(6 of h2, h3) { view-timeline-name: --s6; }
+  .prose > :nth-child(7 of h2, h3) { view-timeline-name: --s7; }
+  .prose > :nth-child(8 of h2, h3) { view-timeline-name: --s8; }
+  .prose > :nth-child(9 of h2, h3) { view-timeline-name: --s9; }
+  .prose > :nth-child(10 of h2, h3) { view-timeline-name: --s10; }
+  .prose > :nth-child(11 of h2, h3) { view-timeline-name: --s11; }
+  .prose > :nth-child(12 of h2, h3) { view-timeline-name: --s12; }
+
+  .rail-item .rail-dash {
+    animation: rail-on linear none;
+    animation-range: cover 0% cover 100%;
+  }
+
+  .rail-item:nth-child(1) .rail-dash { animation-timeline: --s1; }
+  .rail-item:nth-child(2) .rail-dash { animation-timeline: --s2; }
+  .rail-item:nth-child(3) .rail-dash { animation-timeline: --s3; }
+  .rail-item:nth-child(4) .rail-dash { animation-timeline: --s4; }
+  .rail-item:nth-child(5) .rail-dash { animation-timeline: --s5; }
+  .rail-item:nth-child(6) .rail-dash { animation-timeline: --s6; }
+  .rail-item:nth-child(7) .rail-dash { animation-timeline: --s7; }
+  .rail-item:nth-child(8) .rail-dash { animation-timeline: --s8; }
+  .rail-item:nth-child(9) .rail-dash { animation-timeline: --s9; }
+  .rail-item:nth-child(10) .rail-dash { animation-timeline: --s10; }
+  .rail-item:nth-child(11) .rail-dash { animation-timeline: --s11; }
+  .rail-item:nth-child(12) .rail-dash { animation-timeline: --s12; }
+}
+
+@keyframes rail-on {
+  from,
+  to {
+    width: 1.5rem;
+    background: var(--accent);
+  }
+}
+
+.prose h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-size: 1.4375rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.prose h3 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.1875rem;
+  font-weight: 600;
+}
+
+.prose p,
+.prose ul,
+.prose ol,
+.prose blockquote,
+.prose table {
+  margin: 0 0 1.15rem;
+}
+
+.prose li + li {
+  margin-top: 0.35rem;
+}
+
+.prose blockquote {
+  padding-left: 1rem;
+  border-left: 3px solid var(--line-strong);
+  color: var(--muted);
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.prose th,
+.prose td {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.prose :not(pre) > code {
+  padding: 0.12em 0.4em;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  overflow-wrap: anywhere;
+}
+
+.prose pre {
+  margin: 0 0 1.5rem;
+  overflow-x: auto;
+  border: 1px solid var(--code-line);
+  border-radius: 10px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-size: 0.875rem;
+  line-height: 1.65;
+}
+
+/* Top bar of every code block: the language on the left, the Copy button (if any) on the right. */
+.prose pre::before {
+  content: 'code';
+  position: sticky;
+  left: 0;
+  display: block;
+  height: var(--code-bar-h);
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--code-line);
+  background: var(--code-bar);
+  color: var(--code-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  line-height: var(--code-bar-h);
+  text-transform: uppercase;
+}
+
+.prose pre[data-language]::before {
+  content: attr(data-language);
+}
+
+/* /copy.js wraps each block so the button stays put while the code scrolls sideways. */
+.code-block {
+  position: relative;
+  margin: 0 0 1.5rem;
+}
+
+.code-block > pre {
+  margin: 0;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: var(--code-bar-h);
+  padding: 0 0.85rem 0 0.8rem;
+  border: 0;
+  border-left: 1px solid var(--code-line);
+  border-radius: 0 9px 0 0;
+  background: var(--code-bar);
+  color: var(--code-muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+/* Two overlapping squares, drawn with a border and two shadows. */
+.copy-btn::before {
+  content: '';
+  width: 0.55rem;
+  height: 0.65rem;
+  margin-top: 2px;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  background: var(--code-bar);
+  box-shadow:
+    2.5px -2.5px 0 -1px var(--code-bar),
+    2.5px -2.5px 0 0.5px currentColor;
+}
+
+.copy-btn:hover {
+  color: var(--code-text);
+}
+
+.copy-btn:focus-visible {
+  outline: 2px solid var(--code-accent);
+  outline-offset: -2px;
+}
+
+/* After copying: a check mark in green. */
+.copy-btn.is-copied {
+  color: var(--syn-ok);
+}
+
+.copy-btn.is-copied::before {
+  width: 0.35rem;
+  height: 0.65rem;
+  margin: 0 0.1rem 0.2rem;
+  border-width: 0 2px 2px 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  transform: rotate(45deg);
+}
+
+.prose pre code {
+  display: block;
+  padding: 1rem 1.1rem;
+  font-family: var(--font-mono);
+}
+
+/* Syntax highlighting (Prism token classes), on the always-dark code surface */
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--code-muted);
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: var(--code-muted);
+}
+
+.token.keyword,
+.token.selector,
+.token.atrule,
+.token.important {
+  color: var(--syn-method);
+}
+
+.token.string,
+.token.char,
+.token.attr-value,
+.token.inserted {
+  color: var(--syn-string);
+}
+
+.token.number,
+.token.boolean,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--syn-number);
+}
+
+.token.function,
+.token.class-name,
+.token.builtin {
+  color: var(--syn-function);
+}
+
+.token.property,
+.token.attr-name,
+.token.tag,
+.token.variable {
+  color: var(--syn-header);
+}
+
+/* HTTP requests: after the generic rules so these win. */
+
+.token.method {
+  color: var(--syn-method);
+  font-weight: 600;
+}
+
+.token.request-target {
+  color: var(--syn-target);
+}
+
+.token.http-version {
+  color: var(--code-muted);
+}
+
+.token.header-name {
+  color: var(--syn-header);
+}
+
+.token.header-value {
+  color: var(--code-text);
+}
+
+/* Footer */
+
+.site-footer {
+  border-top: 1px solid var(--line);
+}
+
+.footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 2rem;
+  padding-block: 1.5rem;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-links a {
+  display: inline-block;
+  padding-block: 0.3rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: var(--text);
+}
+
+.footer-note {
+  margin: 0;
+}
+
+/* Wider screens */
+
+@media (min-width: 48rem) {
+  .bento {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tile-now {
+    grid-column: span 2;
+    min-height: 15rem;
+  }
+
+  .tile-path {
+    grid-column: 1 / -1;
+  }
+
+  .path {
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 1rem;
+  }
+
+  .path-step {
+    padding-top: 2.1rem;
+    padding-left: 0;
+  }
+
+  .path-step:not(:last-child)::before {
+    top: 0.5rem;
+    right: -1rem;
+    bottom: auto;
+    left: 1.6rem;
+    width: auto;
+    height: 2px;
+  }
+
+  .path-node {
+    top: 0;
+  }
+}
+
+@media (min-width: 60rem) {
+  .hero-inner {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 4rem;
+  }
+
+  .doc-body {
+    grid-template-columns: 12rem minmax(0, 1fr);
+    gap: 3rem;
+  }
+
+  .facts {
+    position: sticky;
+    top: calc(var(--header-h) + 2rem);
+    align-self: start;
+  }
+
+  .facts dl {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 30rem) {
+  /* Tight enough that the header stays on one row on 360px-wide phones. */
+  .site-nav ul {
+    gap: 0.25rem 0.8rem;
+  }
+
+  .site-nav a {
+    font-size: 0.8125rem;
+  }
+}
+
+/*
+  Smartwatches and other very small screens (under 288px wide). Apple Watch gets this
+  layout too: the page opts out of its shrink-to-fit mode (meta disabled-adaptations).
+*/
+@media (max-width: 18rem) {
+  body {
+    font-size: 0.9375rem;
+  }
+
+  .wrap {
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
+  }
+
+  /* The header scrolls away instead of covering half the screen. */
+  .site-header {
+    position: relative;
+  }
+
+  section[id],
+  .prose :is(h2, h3) {
+    scroll-margin-top: 1rem;
+  }
+
+  .header-inner {
+    justify-content: center;
+    min-height: 0;
+    padding-block: 0.6rem;
+  }
+
+  .site-nav ul {
+    justify-content: center;
+    gap: 0 0.85rem;
+  }
+
+  .site-nav a {
+    font-size: 0.75rem;
+  }
+
+  .hero-inner {
+    gap: 1.75rem;
+    padding-block: 1.75rem 2.25rem;
+  }
+
+  .eyebrow {
+    margin-bottom: 0.85rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+  }
+
+  .eyebrow .nowrap {
+    white-space: normal;
+  }
+
+  /* Sized to the screen, so the name always fits on one line with its cursor. */
+  .handle {
+    font-size: 17vw;
+  }
+
+  .handle-small {
+    font-size: 13vw;
+  }
+
+  .intro,
+  .contact-lede,
+  .page-summary {
+    font-size: 1rem;
+  }
+
+  .actions {
+    gap: 0.5rem;
+  }
+
+  .button {
+    padding: 0.6rem 0.85rem;
+    font-size: 0.8125rem;
+  }
+
+  .section {
+    padding-block: 2.5rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .tile,
+  .finding,
+  .pager-link {
+    padding: 0.9rem;
+  }
+
+  .now-title {
+    font-size: 11vw;
+  }
+
+  .finding-title {
+    font-size: 1rem;
+  }
+
+  .contact-inner {
+    padding-block: 3rem;
+  }
+
+  .contact-title {
+    font-size: 13vw;
+  }
+
+  .contact-email {
+    gap: 0.5rem;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.875rem;
+  }
+
+  .page-head {
+    padding-block: 1.75rem 1.5rem;
+  }
+
+  .page-title {
+    font-size: 1.375rem;
+  }
+
+  .prose h2 {
+    font-size: 1.1875rem;
+  }
+
+  .prose h3 {
+    font-size: 1.0625rem;
+  }
+
+  .prose pre {
+    font-size: 0.75rem;
+  }
+
+  .prose pre code {
+    padding: 0.75rem 0.8rem;
+  }
+}
+
+/* Short landscape phones: the header scrolls away here too. */
+@media (max-height: 22.5rem) {
+  .site-header {
+    position: relative;
+  }
+
+  section[id],
+  .prose :is(h2, h3) {
+    scroll-margin-top: 1rem;
+  }
+}
+
+/* Very large screens at 100% zoom: scale everything up a little. */
+@media (min-width: 150rem) {
+  html {
+    font-size: 112.5%;
+  }
+}
+
+@media (min-width: 200rem) {
+  html {
+    font-size: 125%;
+  }
+}
+
+/*
+  Motion. Everything above is the finished, static state, which is what visitors who
+  prefer reduced motion get. On load the hero copy rises in, the name's letters arrive one
+  by one, a scan sweeps the dot grid, and the panel plays its first request.
+*/
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Blinking and pulsing stop within 5 seconds (WCAG 2.2.2), then stay still. */
+  .caret {
+    animation: blink 1.15s steps(1) 4;
+  }
+
+  .live-dot {
+    animation: pulse 2s ease-out 2;
+  }
+
+  .hero-copy > :not(h1) {
+    animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .hero-copy > :nth-child(3) {
+    animation-delay: 0.2s;
+  }
+
+  .hero-copy > :nth-child(4) {
+    animation-delay: 0.3s;
+  }
+
+  .glyph {
+    display: inline-block;
+  }
+
+  .handle .glyph {
+    animation: glyph-in 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.06s + var(--g, 0) * 55ms) both;
+  }
+
+  /* On hover a wave of weight runs through the letters. The entrance stays listed so it doesn't replay. */
+  .handle:hover .glyph {
+    animation:
+      glyph-in 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) calc(0.06s + var(--g, 0) * 55ms) both,
+      glyph-wave 0.9s ease-in-out calc(var(--g, 0) * 45ms);
+  }
+
+  .contact-title:hover .glyph {
+    animation: glyph-wave 0.9s ease-in-out calc(var(--g, 0) * 45ms);
+  }
+
+  .hero-scan {
+    display: block;
+    -webkit-mask: linear-gradient(to bottom, transparent, #000 40%, #000 60%, transparent) no-repeat 0 -14rem / 100% 14rem;
+    mask: linear-gradient(to bottom, transparent, #000 40%, #000 60%, transparent) no-repeat 0 -14rem / 100% 14rem;
+    animation: hero-scan 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.15s both;
+  }
+
+  /*
+    Pointer spotlight on the hero and the contact band. A grid of invisible cells (16 x 28) lies
+    over the section's background and text, below its links, buttons and panel. The light is the
+    grid's last child: the hovered row reaches it with a sibling selector and sets its height, and
+    the row's hovered cell sets its position across. Over a control the light dims and waits.
+    Trade-off: text in these two sections can't be drag-selected with a mouse.
+  */
+  @media (hover: hover) and (pointer: fine) {
+    /* No z-index, so this is not a stacking context: the light inside can sit behind the text. */
+    .spot-hits {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-rows: repeat(16, 1fr);
+    }
+
+    .spot-hits > div {
+      display: grid;
+      grid-template-columns: repeat(28, 1fr);
+    }
+
+    /* Controls and the hover-wave headings sit above the cells. */
+    .hero-inner :is(.handle, .actions, .repeater),
+    .contact-inner :is(.contact-title, .contact-email, .contact-alt a) {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-inner :is(.handle, .actions),
+    .contact-title {
+      width: fit-content;
+    }
+
+    /* Red dots on the grey dots' grid, plus a glow, masked to a wide circle around the pointer. */
+    .spot-light {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        radial-gradient(var(--accent) 1.3px, transparent 1.8px),
+        radial-gradient(circle 22rem at var(--spot-x) var(--spot-y), color-mix(in srgb, var(--glow) 60%, transparent), transparent);
+      background-size:
+        24px 24px,
+        100% 100%;
+      -webkit-mask-image: radial-gradient(circle 20rem at var(--spot-x) var(--spot-y), #000 25%, transparent);
+      mask-image: radial-gradient(circle 20rem at var(--spot-x) var(--spot-y), #000 25%, transparent);
+      opacity: 0;
+      pointer-events: none;
+      /* A very long transition holds the position while no cell is hovered. */
+      transition:
+        opacity 0.4s ease,
+        --spot-x 9999s,
+        --spot-y 9999s;
+    }
+
+    .has-spot:hover .spot-light {
+      opacity: 0.4;
+    }
+
+    .spot-hits > div:hover ~ .spot-light {
+      opacity: 1;
+      transition:
+        opacity 0.4s ease,
+        --spot-x 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+        --spot-y 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .spot-hits > div:nth-child(1):hover ~ .spot-light { --spot-y: 3.125%; }
+    .spot-hits > div:nth-child(2):hover ~ .spot-light { --spot-y: 9.375%; }
+    .spot-hits > div:nth-child(3):hover ~ .spot-light { --spot-y: 15.625%; }
+    .spot-hits > div:nth-child(4):hover ~ .spot-light { --spot-y: 21.875%; }
+    .spot-hits > div:nth-child(5):hover ~ .spot-light { --spot-y: 28.125%; }
+    .spot-hits > div:nth-child(6):hover ~ .spot-light { --spot-y: 34.375%; }
+    .spot-hits > div:nth-child(7):hover ~ .spot-light { --spot-y: 40.625%; }
+    .spot-hits > div:nth-child(8):hover ~ .spot-light { --spot-y: 46.875%; }
+    .spot-hits > div:nth-child(9):hover ~ .spot-light { --spot-y: 53.125%; }
+    .spot-hits > div:nth-child(10):hover ~ .spot-light { --spot-y: 59.375%; }
+    .spot-hits > div:nth-child(11):hover ~ .spot-light { --spot-y: 65.625%; }
+    .spot-hits > div:nth-child(12):hover ~ .spot-light { --spot-y: 71.875%; }
+    .spot-hits > div:nth-child(13):hover ~ .spot-light { --spot-y: 78.125%; }
+    .spot-hits > div:nth-child(14):hover ~ .spot-light { --spot-y: 84.375%; }
+    .spot-hits > div:nth-child(15):hover ~ .spot-light { --spot-y: 90.625%; }
+    .spot-hits > div:nth-child(16):hover ~ .spot-light { --spot-y: 96.875%; }
+
+    .spot-hits > div:has(> i:nth-child(1):hover) ~ .spot-light { --spot-x: 1.786%; }
+    .spot-hits > div:has(> i:nth-child(2):hover) ~ .spot-light { --spot-x: 5.357%; }
+    .spot-hits > div:has(> i:nth-child(3):hover) ~ .spot-light { --spot-x: 8.929%; }
+    .spot-hits > div:has(> i:nth-child(4):hover) ~ .spot-light { --spot-x: 12.5%; }
+    .spot-hits > div:has(> i:nth-child(5):hover) ~ .spot-light { --spot-x: 16.071%; }
+    .spot-hits > div:has(> i:nth-child(6):hover) ~ .spot-light { --spot-x: 19.643%; }
+    .spot-hits > div:has(> i:nth-child(7):hover) ~ .spot-light { --spot-x: 23.214%; }
+    .spot-hits > div:has(> i:nth-child(8):hover) ~ .spot-light { --spot-x: 26.786%; }
+    .spot-hits > div:has(> i:nth-child(9):hover) ~ .spot-light { --spot-x: 30.357%; }
+    .spot-hits > div:has(> i:nth-child(10):hover) ~ .spot-light { --spot-x: 33.929%; }
+    .spot-hits > div:has(> i:nth-child(11):hover) ~ .spot-light { --spot-x: 37.5%; }
+    .spot-hits > div:has(> i:nth-child(12):hover) ~ .spot-light { --spot-x: 41.071%; }
+    .spot-hits > div:has(> i:nth-child(13):hover) ~ .spot-light { --spot-x: 44.643%; }
+    .spot-hits > div:has(> i:nth-child(14):hover) ~ .spot-light { --spot-x: 48.214%; }
+    .spot-hits > div:has(> i:nth-child(15):hover) ~ .spot-light { --spot-x: 51.786%; }
+    .spot-hits > div:has(> i:nth-child(16):hover) ~ .spot-light { --spot-x: 55.357%; }
+    .spot-hits > div:has(> i:nth-child(17):hover) ~ .spot-light { --spot-x: 58.929%; }
+    .spot-hits > div:has(> i:nth-child(18):hover) ~ .spot-light { --spot-x: 62.5%; }
+    .spot-hits > div:has(> i:nth-child(19):hover) ~ .spot-light { --spot-x: 66.071%; }
+    .spot-hits > div:has(> i:nth-child(20):hover) ~ .spot-light { --spot-x: 69.643%; }
+    .spot-hits > div:has(> i:nth-child(21):hover) ~ .spot-light { --spot-x: 73.214%; }
+    .spot-hits > div:has(> i:nth-child(22):hover) ~ .spot-light { --spot-x: 76.786%; }
+    .spot-hits > div:has(> i:nth-child(23):hover) ~ .spot-light { --spot-x: 80.357%; }
+    .spot-hits > div:has(> i:nth-child(24):hover) ~ .spot-light { --spot-x: 83.929%; }
+    .spot-hits > div:has(> i:nth-child(25):hover) ~ .spot-light { --spot-x: 87.5%; }
+    .spot-hits > div:has(> i:nth-child(26):hover) ~ .spot-light { --spot-x: 91.071%; }
+    .spot-hits > div:has(> i:nth-child(27):hover) ~ .spot-light { --spot-x: 94.643%; }
+    .spot-hits > div:has(> i:nth-child(28):hover) ~ .spot-light { --spot-x: 98.214%; }
+  }
+
+  .button:hover .button-arrow {
+    transform: translateX(3px);
+  }
+
+  .button:hover .button-arrow.is-down {
+    transform: translateY(2px);
+  }
+
+  .button:hover .button-arrow.is-out {
+    transform: translate(2px, -2px);
+  }
+
+  .button-primary:hover::after {
+    transform: translateX(110%);
+    transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .finding,
+  .pager-link {
+    transition:
+      border-color 0.15s,
+      box-shadow 0.2s,
+      transform 0.2s;
+  }
+
+  .finding:hover,
+  .pager-link:hover {
+    transform: translateY(-2px);
+  }
+
+  .pager-link:hover .pager-arrow {
+    transform: translateX(-3px);
+  }
+
+  .pager-link.is-older:hover .pager-arrow {
+    transform: translateX(3px);
+  }
+
+  .contact-email:hover .contact-arrow {
+    transform: translateX(4px);
+  }
+
+  /* The panel rises in once. Each pane plays its exchange every time it is shown. */
+  .repeater {
+    --t-type: 0.35s;
+    --t-host: 1.5s;
+    --t-send: 1.7s;
+    --t-arrive: 2.15s;
+    --t-done: 2.95s;
+    animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  /* 48 steps of 1ch, 30ms per character; max-width stops it at the end of the text. */
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .typed {
+    animation: type 1.44s steps(48, end) var(--t-type) both;
+  }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .cursor {
+    display: inline-block;
+    width: 0.6ch;
+    height: 1.3em;
+    margin-left: 1px;
+    vertical-align: top;
+    background: var(--code-accent);
+    animation:
+      blink 0.9s steps(1) 2,
+      vanish 0.01s linear var(--t-send) forwards;
+  }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .ln-host {
+    animation: print 0.18s ease-out var(--t-host) both;
+  }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .pending {
+    animation: pending 0.45s linear var(--t-send);
+  }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .repeater-bar-response::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    background: var(--code-accent);
+    box-shadow: 0 0 12px var(--code-accent);
+    opacity: 0;
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: sweep 0.5s ease-in-out var(--t-send);
+  }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .repeater-status {
+    animation: arrive 0.6s ease-out var(--t-arrive) both;
+  }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .repeater-response .ln {
+    animation: print 0.2s ease-out calc(var(--t-arrive) + var(--i, 0) * 70ms) both;
+  }
+
+  .repeater-response .ln:nth-child(2) { --i: 1; }
+  .repeater-response .ln:nth-child(3) { --i: 2; }
+  .repeater-response .ln:nth-child(4) { --i: 3; }
+  .repeater-response .ln:nth-child(5) { --i: 4; }
+  .repeater-response .ln:nth-child(6) { --i: 5; }
+  .repeater-response .ln:nth-child(7) { --i: 6; }
+  .repeater-response .ln:nth-child(8) { --i: 7; }
+  .repeater-response .ln:nth-child(9) { --i: 8; }
+  .repeater-response .ln:nth-child(10) { --i: 9; }
+  .repeater-response .ln:nth-child(11) { --i: 10; }
+  .repeater-response .ln:nth-child(12) { --i: 11; }
+  .repeater-response .ln:nth-child(13) { --i: 12; }
+  .repeater-response .ln:nth-child(14) { --i: 13; }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .repeater-foot > * {
+    animation: print 0.3s ease-out var(--t-done) both;
+  }
+
+  /* One soft scan pass once the response is in. */
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1;
+    height: 45%;
+    background: linear-gradient(to bottom, transparent, var(--code-scan) 55%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    animation: scan 1.3s ease-in-out var(--t-done);
+  }
+}
+
+/*
+  Scroll-driven effects, where supported. The header is clear over the top of the page and
+  frosts as you scroll; writeups get a reading-progress line; the nav marks the section
+  you are in. Depth: the dot grids and glows drift a little slower than the page.
+*/
+@supports (animation-timeline: scroll()) {
+  .site-header {
+    animation: header-glass linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 6rem;
+  }
+
+  .read-progress {
+    display: block;
+    animation: read linear both;
+    animation-timeline: scroll(root);
+  }
+
+  #writeups {
+    view-timeline-name: --sec-writeups;
+  }
+
+  #progress {
+    view-timeline-name: --sec-progress;
+  }
+
+  #contact {
+    view-timeline-name: --sec-contact;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* The dot grids drift only on touch screens; with a mouse they hold still under the spotlight. */
+    @media (hover: none), (pointer: coarse) {
+      .hero::before {
+        inset: -15% 0 0;
+        animation: drift-down linear both;
+        animation-timeline: scroll(root);
+        animation-range: 0px 80vh;
+      }
+
+      /* The scan shares the dot grid's box and drift, so its red dots land on the grey ones. */
+      .hero-scan {
+        inset: -15% 0 0;
+        animation:
+          hero-scan 2.6s cubic-bezier(0.45, 0, 0.25, 1) 0.15s both,
+          drift-down linear both;
+        animation-timeline: auto, scroll(root);
+        animation-range: normal, 0px 80vh;
+      }
+
+      .contact-band::before {
+        inset: -12% 0;
+        animation: drift-band linear both;
+        animation-timeline: --sec-contact;
+        animation-range: entry 0% exit 100%;
+      }
+    }
+
+    .hero::after {
+      animation: aura-drift linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0px 80vh;
+    }
+
+    .contact-band::after {
+      animation: aura-rise linear both;
+      animation-timeline: --sec-contact;
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
+/* A nav link lights up while its section crosses a line just above the middle of the screen. */
+@supports (timeline-scope: --a) and (animation-timeline: view()) {
+  body {
+    timeline-scope: --sec-writeups, --sec-progress, --sec-contact;
+  }
+
+  .site-nav a {
+    animation: nav-spy linear;
+    animation-range: cover 45vh cover calc(100% - 55vh);
+  }
+
+  .site-nav .nav-writeups {
+    animation-timeline: --sec-writeups;
+  }
+
+  .site-nav .nav-progress {
+    animation-timeline: --sec-progress;
+  }
+
+  .site-nav .nav-contact {
+    animation-timeline: --sec-contact;
+  }
+}
+
+/* Tiles, cards and the progress bar animate in as they scroll into view, where the browser supports it. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* "entry 100%" = the element is fully on screen, so nothing can get stuck half-revealed. */
+    .finding,
+    .tile {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 100%;
+    }
+
+    .tile-now progress {
+      animation: draw linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 100%;
+    }
+  }
+}
+
+/*
+  Moving between pages, where supported: the header stays put, the new page fades up, and
+  a writeup's title flies from the card you clicked into place.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition {
+    navigation: auto;
+  }
+}
+
+.doc .page-title,
+.finding:focus-within .finding-title {
+  view-transition-name: writeup-title;
+}
+
+::view-transition-old(root) {
+  animation: vt-out 0.18s ease-in both;
+}
+
+::view-transition-new(root) {
+  animation: vt-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+::view-transition-group(writeup-title) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media print {
+  .site-header {
+    position: static;
+  }
+
+  body::after,
+  .hero-scan,
+  .rail,
+  .read-progress,
+  .copy-btn {
+    display: none;
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--medium) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0.6rem transparent;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes type {
+  from {
+    width: 0;
+  }
+  to {
+    width: 48ch;
+  }
+}
+
+@keyframes vanish {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes print {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+@keyframes pending {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  12%,
+  88% {
+    opacity: 1;
+  }
+}
+
+@keyframes sweep {
+  0% {
+    opacity: 1;
+    transform: scaleX(0);
+  }
+  80% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes arrive {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.08);
+    text-shadow: 0 0 14px currentColor;
+  }
+  100% {
+    transform: scale(1);
+    text-shadow: 0 0 0 transparent;
+  }
+}
+
+@keyframes scan {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  20%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(230%);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes draw {
+  from {
+    clip-path: inset(0 100% 0 0 round 999px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 999px);
+  }
+}
+
+@keyframes glyph-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.2em);
+    font-weight: 200;
+  }
+}
+
+@keyframes glyph-wave {
+  45% {
+    font-weight: 200;
+    color: var(--accent);
+  }
+}
+
+@keyframes hero-scan {
+  from {
+    -webkit-mask-position: 0 -14rem;
+    mask-position: 0 -14rem;
+  }
+  80% {
+    opacity: 1;
+  }
+  to {
+    -webkit-mask-position: 0 calc(100% + 14rem);
+    mask-position: 0 calc(100% + 14rem);
+    opacity: 0;
+  }
+}
+
+@keyframes header-glass {
+  from {
+    border-bottom-color: transparent;
+    background-color: transparent;
+    -webkit-backdrop-filter: blur(0) saturate(1);
+    backdrop-filter: blur(0) saturate(1);
+  }
+}
+
+@keyframes read {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes nav-spy {
+  from,
+  to {
+    background-size: 100% 2px;
+    color: var(--text);
+  }
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* Very narrow panels (watches): the tabs stack, and the request line wraps instead of typing out. */
+@container (max-width: 17rem) {
+  .ep-tabs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ep-tab:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  .repeater-bar {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .typed {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  :is(.ep-pane:only-child, .ep-input:checked + .ep-pane) .typed {
+    animation: none;
+  }
+
+  .repeater-pane,
+  .repeater-bar,
+  .repeater-foot {
+    padding-inline: 0.6rem;
+  }
+}

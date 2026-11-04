@@ -1,0 +1,153 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { profile } from '../../data/profile';
+import { formatDate, getWriteups, isoDate, levelOf, readingMinutes, type Writeup } from '../../lib/writeups';
+
+export async function getStaticPaths() {
+  const writeups = await getWriteups();
+  // Newest first, so the entry before is newer and the one after is older.
+  return writeups.map((entry, i) => ({
+    params: { id: entry.id },
+    props: { entry, newer: writeups[i - 1], older: writeups[i + 1] },
+  }));
+}
+
+interface Props {
+  entry: Writeup;
+  newer?: Writeup;
+  older?: Writeup;
+}
+
+const { entry, newer, older } = Astro.props;
+const { Content, headings } = await render(entry);
+const { title, description, date, platform, difficulty, tags, draft } = entry.data;
+const outline = headings.filter((h) => h.depth === 2 || h.depth === 3).slice(0, 12);
+const showOutline = outline.length >= 3;
+const subject = encodeURIComponent(`About: ${title}`);
+---
+
+<Base title={title} description={description} type="article" copyButtons>
+  <article class="doc">
+    <header class="page-head">
+      <div class="wrap">
+        <a class="back" href="/writeups/"><span aria-hidden="true">←</span> Writeups</a>
+        <h1 class="page-title">{title}</h1>
+        <p class="page-summary">{description}</p>
+      </div>
+    </header>
+    <div class="wrap doc-body">
+      <aside class="facts" aria-label="Details">
+        <dl>
+          <div>
+            <dt>Platform</dt>
+            <dd>{platform}</dd>
+          </div>
+          {
+            difficulty && (
+              <div>
+                <dt>Difficulty</dt>
+                <dd>
+                  <span class:list={['level', `level-${levelOf(difficulty)}`]}>{difficulty}</span>
+                </dd>
+              </div>
+            )
+          }
+          <div>
+            <dt>Published</dt>
+            <dd><time datetime={isoDate(date)}>{formatDate(date)}</time></dd>
+          </div>
+          <div>
+            <dt>Reading time</dt>
+            <dd>{readingMinutes(entry.body)} min</dd>
+          </div>
+          {
+            tags.length > 0 && (
+              <div>
+                <dt>Tags</dt>
+                <dd class="tags">
+                  {tags.map((tag) => (
+                    <span>#{tag}</span>
+                  ))}
+                </dd>
+              </div>
+            )
+          }
+          {
+            draft && (
+              <div>
+                <dt>Status</dt>
+                <dd>
+                  <span class="level level-draft">Draft</span>
+                </dd>
+              </div>
+            )
+          }
+        </dl>
+        {
+          showOutline && (
+            <nav class="contents" aria-label="Contents">
+              <p class="contents-title">On this page</p>
+              <ol>
+                {outline.map((h) => (
+                  <li class={`depth-${h.depth}`}>
+                    <a href={`#${h.slug}`}>{h.text}</a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
+      </aside>
+      <div class="doc-main">
+        <div class="prose">
+          <Content />
+        </div>
+        <footer class="doc-end">
+          <p class="doc-feedback">
+            Spotted a mistake, or know a better way? <a href={`mailto:${profile.email}?subject=${subject}`}>Email me</a>.
+            I'm learning, and corrections help.
+          </p>
+          {
+            (newer || older) && (
+              <nav class="pager" aria-label="More writeups">
+                {newer && (
+                  <a class="pager-link" href={`/writeups/${newer.id}/`}>
+                    <span class="pager-dir">
+                      <span class="pager-arrow" aria-hidden="true">←</span> Newer
+                    </span>
+                    <span class="pager-title">{newer.data.title}</span>
+                  </a>
+                )}
+                {older && (
+                  <a class="pager-link is-older" href={`/writeups/${older.id}/`}>
+                    <span class="pager-dir">
+                      Older <span class="pager-arrow" aria-hidden="true">→</span>
+                    </span>
+                    <span class="pager-title">{older.data.title}</span>
+                  </a>
+                )}
+              </nav>
+            )
+          }
+        </footer>
+      </div>
+    </div>
+    {
+      showOutline && (
+        <nav class="rail" aria-label="Sections">
+          <ol>
+            {outline.map((h) => (
+              <li class:list={['rail-item', `depth-${h.depth}`]}>
+                <a href={`#${h.slug}`}>
+                  <span class="rail-label">{h.text}</span>
+                  <span class="rail-dash" aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+  </article>
+</Base>

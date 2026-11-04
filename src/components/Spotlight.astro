@@ -1,0 +1,23 @@
+---
+/**
+ * Pointer spotlight for a section background, in CSS only (see global.css). A grid of invisible
+ * cells lies over the section's background and text; the light is the last child, so the hovered
+ * row and cell can reach it with sibling selectors, which keeps each mouse move cheap.
+ * Place it at the end of a section with the class "has-spot".
+ */
+const rows = 16;
+const cols = 28;
+---
+
+<div class="spot-hits" aria-hidden="true">
+  {
+    Array.from({ length: rows }, () => (
+      <div>
+        {Array.from({ length: cols }, () => (
+          <i />
+        ))}
+      </div>
+    ))
+  }
+  <span class="spot-light"></span>
+</div>

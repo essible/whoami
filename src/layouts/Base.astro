@@ -1,0 +1,112 @@
+---
+import '@fontsource-variable/martian-mono';
+import '@fontsource/ibm-plex-sans/400.css';
+import '@fontsource/ibm-plex-sans/400-italic.css';
+import '@fontsource/ibm-plex-sans/600.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '../styles/global.css';
+// Same files the stylesheet uses (same hashed names); preloaded because the name and body text need them first.
+import martianUrl from '@fontsource-variable/martian-mono/files/martian-mono-latin-wght-normal.woff2?url';
+import plexSansUrl from '@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2?url';
+import { profile } from '../data/profile';
+import { getWriteups } from '../lib/writeups';
+
+interface Props {
+  title?: string;
+  description?: string;
+  type?: 'website' | 'article';
+  /** Loads /copy.js, which adds Copy buttons to code blocks. The only script on the site. */
+  copyButtons?: boolean;
+  /** For the 404 page: no canonical URL, and search engines are asked not to index it. */
+  noindex?: boolean;
+}
+
+const { title, description = profile.description, type = 'website', copyButtons = false, noindex = false } = Astro.props;
+const pageTitle = title ? `${title} · ${profile.handle}` : `${profile.handle} · ${profile.headline}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+const path = Astro.url.pathname;
+const hasWriteups = (await getWriteups()).length > 0;
+// Astro drops template comments, so this one is injected as raw HTML. For whoever reads the source.
+const sourceNote = `<!--
+  Reading the source? Good instinct. No passwords in this comment.
+  What you will find: no trackers, no third-party code, and a strict Content-Security-Policy.
+  The only script is /copy.js, the copy buttons on writeups. It's short; read it.
+  Every response in the home page's request panel is a real file: curl -i https://essible.pages.dev/whoami.json
+  Found a bug? https://essible.pages.dev/.well-known/security.txt
+-->`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <Fragment set:html={sourceNote} />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="disabled-adaptations" content="watch" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    <link rel="preload" href={martianUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={plexSansUrl} as="font" type="font/woff2" crossorigin />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0b0a0a" />
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={profile.handle} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {!noindex && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${profile.handle}: ${profile.headline}`} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {copyButtons && <script is:inline type="module" src="/copy.js"></script>}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="wordmark" href="/" aria-label={`${profile.handle}, home`}>
+          <span class="wordmark-mark" aria-hidden="true"></span>{profile.handle}
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <ul>
+            {
+              hasWriteups && (
+                <li>
+                  <a class="nav-writeups" href="/writeups/" aria-current={path.startsWith('/writeups') ? 'page' : undefined}>
+                    writeups
+                  </a>
+                </li>
+              )
+            }
+            <li><a class="nav-progress" href="/#progress">progress</a></li>
+            <li><a class="nav-contact" href="/#contact">contact</a></li>
+          </ul>
+        </nav>
+      </div>
+      {type === 'article' && <span class="read-progress" aria-hidden="true"></span>}
+    </header>
+    <main id="main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap footer-inner">
+        <ul class="footer-links">
+          <li><a href={profile.github}>GitHub</a></li>
+          <li><a href={`mailto:${profile.email}`}>Email</a></li>
+          <li><a href="/.well-known/security.txt">security.txt</a></li>
+          <li><a href={profile.source}>Source</a></li>
+        </ul>
+        <p class="footer-note">
+          {copyButtons ? <><a href="/copy.js">1 script</a> (copy buttons)</> : '0 scripts'} · CSP default-src 'none'
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
