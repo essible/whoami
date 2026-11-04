@@ -9,7 +9,7 @@ import { path, profile, toolkit, type PathStatus } from '../data/profile';
 import { getWriteups } from '../lib/writeups';
 
 const writeups = (await getWriteups()).slice(0, 4);
-const endpoints = await heroEndpoints();
+const endpoints = await heroEndpoints(Astro.site!);
 const now = path.find((item) => item.status === 'active');
 const statusLabel: Record<PathStatus, string> = {
   done: 'Completed',
@@ -68,7 +68,7 @@ const statusLabel: Record<PathStatus, string> = {
           }
         </ul>
       </div>
-      <Repeater host="essible.pages.dev" endpoints={endpoints} label="Requests to this site" />
+      <Repeater host={Astro.site!.host} endpoints={endpoints} label="Requests to this site" />
     </div>
     <Spotlight />
   </section>

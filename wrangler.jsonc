@@ -1,0 +1,11 @@
+// Deploys to Cloudflare Workers as static assets: Cloudflare runs `npm run build` and uploads dist/.
+// There is no Worker script, so no server code runs. public/_headers (copied into dist/) sets the
+// security headers. The name must match the Worker's name in the Cloudflare dashboard.
+{
+  "name": "whoami",
+  "compatibility_date": "2026-11-04",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}

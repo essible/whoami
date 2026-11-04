@@ -32,8 +32,8 @@ const sourceNote = `<!--
   Reading the source? Good instinct. No passwords in this comment.
   What you will find: no trackers, no third-party code, and a strict Content-Security-Policy.
   The only script is /copy.js, the copy buttons on writeups. It's short; read it.
-  Every response in the home page's request panel is a real file: curl -i https://essible.pages.dev/whoami.json
-  Found a bug? https://essible.pages.dev/.well-known/security.txt
+  Every response in the home page's request panel is a real file: curl -i ${new URL('/whoami.json', Astro.site).href}
+  Found a bug? ${new URL('/.well-known/security.txt', Astro.site).href}
 -->`;
 ---
 

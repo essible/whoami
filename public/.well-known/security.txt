@@ -1,4 +1,0 @@
-Contact: mailto:essible@proton.me
-Expires: 2027-10-31T23:59:59.000Z
-Preferred-Languages: en
-Canonical: https://essible.pages.dev/.well-known/security.txt

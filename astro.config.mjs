@@ -18,6 +18,8 @@ const writeupImageSizes = {
 };
 
 export default defineConfig({
+  // The site's address. Canonical links, link previews, the sitemap, robots.txt, security.txt and
+  // the request panel's Host line all use it, so this is the one place to change it.
   site: 'https://essible.pages.dev',
   build: {
     // Keep all CSS in external files so the Content-Security-Policy can stay strict.

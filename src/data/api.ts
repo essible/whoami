@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { byteLength, fieldLines, jsonLines, linesToText, type Endpoint } from '../lib/http';
 import { getWriteups } from '../lib/writeups';
+import { securityTxt } from './security';
 import { path, profile, type PathItem, type PathStatus } from './profile';
 
 /**
@@ -36,9 +35,6 @@ export async function writeups() {
   return { count: all.length, latest: all[0] && `/writeups/${all[0].id}/` };
 }
 
-/** Read at build time; the build runs from the project root. */
-const securityTxt = readFileSync(resolve('public/.well-known/security.txt'), 'utf8');
-
 function json(value: Parameters<typeof jsonLines>[0]) {
   const body = jsonLines(value);
   return { body, bytes: byteLength(linesToText(body)) };
@@ -47,8 +43,9 @@ function json(value: Parameters<typeof jsonLines>[0]) {
 const contentType = (value: string) => ({ name: 'content-type', value });
 
 /** Tabs for the panel on the home page. Header values are the ones in public/_headers. */
-export async function heroEndpoints(): Promise<Endpoint[]> {
+export async function heroEndpoints(site: URL): Promise<Endpoint[]> {
   const index = await writeups();
+  const security = securityTxt(site);
   const ok = { status: 200, statusText: 'OK' };
   const endpoints: Endpoint[] = [
     {
@@ -84,8 +81,8 @@ export async function heroEndpoints(): Promise<Endpoint[]> {
     path: '/.well-known/security.txt',
     ...ok,
     headers: [contentType('text/plain; charset=utf-8'), { name: 'x-frame-options', value: 'DENY' }],
-    body: fieldLines(securityTxt),
-    bytes: byteLength(securityTxt),
+    body: fieldLines(security),
+    bytes: byteLength(security),
   });
   return endpoints;
 }

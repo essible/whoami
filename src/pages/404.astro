@@ -35,7 +35,7 @@ const notFound: Endpoint = {
           </li>
         </ul>
       </div>
-      <Repeater host="essible.pages.dev" endpoints={[notFound]} />
+      <Repeater host={Astro.site!.host} endpoints={[notFound]} />
     </div>
     <Spotlight />
   </section>

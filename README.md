@@ -1,6 +1,6 @@
 # whoami
 
-Source for [essible.pages.dev](https://essible.pages.dev): writeups and notes on penetration testing and web application security.
+Source for my portfolio: writeups and notes on penetration testing and web application security.
 
 Built with [Astro](https://astro.build). The output is static HTML and CSS, with no cookies or trackers. The only JavaScript is `public/copy.js`, which adds Copy buttons to code blocks on writeup pages.
 
@@ -56,12 +56,17 @@ The panel reads the same sources, so it always shows what the server sends.
 - Code blocks get a Copy button from `public/copy.js`, the one script on the site. It loads only on writeup pages, and without it the code can still be selected by hand.
 - The layout is tested from smartwatch width (about 160px) up to 4K screens.
 
-## Deploy on Cloudflare Pages
+## Deploy on Cloudflare
+
+The site runs on Cloudflare Workers as static assets (`wrangler.jsonc`): Cloudflare builds it and
+uploads `dist/`. There is no Worker script, so no server code runs.
 
 - Build command: `npm run build`
-- Output directory: `dist`
+- Deploy command: `npx wrangler deploy`
+- The Worker's name in the dashboard must match `name` in `wrangler.jsonc`.
 - The Node.js version is read from `.node-version`.
+- The site's address is set once, as `site` in `astro.config.mjs`.
 
 Security headers are set in `public/_headers`. Scripts may only come from this site (`script-src 'self'`), and Trusted Types (`require-trusted-types-for 'script'`) blocks HTML injection into the page from scripts. The footer links to this repository, so keep it public. Keep Cloudflare Web Analytics turned off, or allow its script in the Content-Security-Policy, otherwise the browser will block it.
 
-`public/.well-known/security.txt` expires on 2027-10-31. Update the `Expires` date before then.
+`/.well-known/security.txt` is generated from `src/data/security.ts`. Its `Expires` date is 2027-10-31; move it forward before then.
