@@ -1,8 +1,8 @@
 # whoami
 
-Source for my portfolio: writeups and notes on penetration testing and web application security.
+Source for [whoami.essible.workers.dev](https://whoami.essible.workers.dev): writeups and notes on penetration testing and web application security.
 
-Built with [Astro](https://astro.build). The output is static HTML and CSS, with no cookies or trackers. The only JavaScript is `public/copy.js`, which adds Copy buttons to code blocks on writeup pages.
+Built with [Astro](https://astro.build). The output is static HTML and CSS, with no cookies or trackers, and the build sends no usage data (Astro and Wrangler telemetry are off). The only JavaScript is `public/copy.js`, which adds Copy buttons to code blocks on writeup pages.
 
 ## Run locally
 

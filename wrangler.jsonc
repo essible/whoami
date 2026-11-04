@@ -4,6 +4,12 @@
 {
   "name": "whoami",
   "compatibility_date": "2026-11-04",
+  // Serve at whoami.<account>.workers.dev. Preview and version URLs stay off: they would keep
+  // every older version of the site reachable at its own address, even after a fix.
+  "workers_dev": true,
+  "preview_urls": false,
+  // No usage data from Wrangler to Cloudflare.
+  "send_metrics": false,
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page"
