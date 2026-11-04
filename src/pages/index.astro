@@ -5,7 +5,7 @@ import Glyphs from '../components/Glyphs.astro';
 import Spotlight from '../components/Spotlight.astro';
 import Repeater from '../components/Repeater.astro';
 import { heroEndpoints } from '../data/api';
-import { path, profile, toolkit, type PathStatus } from '../data/profile';
+import { path, profile, setup, toolkit, type PathStatus } from '../data/profile';
 import { getWriteups } from '../lib/writeups';
 
 const writeups = (await getWriteups()).slice(0, 4);
@@ -124,20 +124,14 @@ const statusLabel: Record<PathStatus, string> = {
             </div>
           )
         }
-        <div class="tile tile-toolkit">
-          <p class="tile-label">Toolkit</p>
-          <dl class="toolkit">
+        <div class="tile tile-setup">
+          <p class="tile-label">Daily setup</p>
+          <dl class="setup">
             {
-              toolkit.map((group) => (
+              setup.map((item) => (
                 <div>
-                  <dt>{group.group}</dt>
-                  <dd>
-                    <ul class="chips">
-                      {group.items.map((item) => (
-                        <li>{item}</li>
-                      ))}
-                    </ul>
-                  </dd>
+                  <dt>{item.label}</dt>
+                  <dd>{item.value}</dd>
                 </div>
               ))
             }
@@ -163,6 +157,25 @@ const statusLabel: Record<PathStatus, string> = {
               ))
             }
           </ol>
+        </div>
+        <div class="tile tile-toolkit">
+          <p class="tile-label">Toolkit <span aria-hidden="true">·</span> used in labs and CTFs</p>
+          <dl class="toolkit">
+            {
+              toolkit.map((group) => (
+                <div>
+                  <dt>{group.group}</dt>
+                  <dd>
+                    <ul class="chips">
+                      {group.items.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
         </div>
       </div>
     </div>

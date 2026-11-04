@@ -68,7 +68,18 @@ export const path: PathItem[] = [
   },
 ];
 
+/** The "Daily setup" tile. */
+export const setup: { label: string; value: string }[] = [
+  { label: 'OS', value: 'Parrot Security' },
+  { label: 'Editor', value: 'Neovim' },
+  { label: 'Shell', value: 'Bash' },
+  { label: 'Version control', value: 'Git' },
+];
+
+/** Tools used in labs and CTFs. Only list what you have actually used. */
 export const toolkit: { group: string; items: string[] }[] = [
-  { group: 'Systems', items: ['Linux command line', 'Bash'] },
-  { group: 'Web', items: ['HTTP', 'HTML, CSS & JavaScript'] },
+  { group: 'Web', items: ['Burp Suite', 'curl', 'HTTP', 'HTML, CSS & JavaScript'] },
+  { group: 'Network', items: ['Wireshark', 'Nmap', 'netcat', 'OpenSSL', 'SSH'] },
+  { group: 'Passwords', items: ['hashcat', 'John the Ripper', 'Hydra'] },
+  { group: 'Forensics & reversing', items: ['binwalk', 'ExifTool', 'Ghidra'] },
 ];

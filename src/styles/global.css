@@ -965,9 +965,11 @@ progress::-moz-progress-bar {
   font-size: 0.8125rem;
 }
 
+/* Toolkit groups sit side by side where there's room: four across on desktop, one on phones. */
 .toolkit {
   display: grid;
-  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 1.25rem 1.5rem;
   margin: 0.35rem 0 0;
 }
 
@@ -980,6 +982,29 @@ progress::-moz-progress-bar {
 
 .toolkit dd {
   margin: 0;
+}
+
+.setup {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0.35rem 0 0;
+}
+
+.setup div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.setup dt {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.setup dd {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
 }
 
 /* Learning path: vertical on phones, a horizontal track on wider screens. */
@@ -1953,7 +1978,8 @@ progress::-moz-progress-bar {
     min-height: 15rem;
   }
 
-  .tile-path {
+  .tile-path,
+  .tile-toolkit {
     grid-column: 1 / -1;
   }
 
