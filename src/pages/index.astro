@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Findings from '../components/Findings.astro';
 import Glyphs from '../components/Glyphs.astro';
+import KeepRanges from '../components/KeepRanges.astro';
 import Spotlight from '../components/Spotlight.astro';
 import Repeater from '../components/Repeater.astro';
 import { heroEndpoints } from '../data/api';
@@ -112,7 +113,7 @@ const statusLabel: Record<PathStatus, string> = {
                 {now.detail && (
                   <>
                     <span aria-hidden="true"> · </span>
-                    {now.detail}
+                    <KeepRanges text={now.detail} />
                   </>
                 )}
               </p>
@@ -149,9 +150,11 @@ const statusLabel: Record<PathStatus, string> = {
                   </a>
                   <span class="path-meta">{item.platform.split(' ')[0]}</span>
                   <span class="path-status">
-                    {item.status === 'paused' && item.detail
-                      ? `${statusLabel.paused} · ${item.detail}`
-                      : statusLabel[item.status]}
+                    {item.status === 'paused' && item.detail ? (
+                      <KeepRanges text={`${statusLabel.paused} · ${item.detail}`} />
+                    ) : (
+                      statusLabel[item.status]
+                    )}
                   </span>
                 </li>
               ))

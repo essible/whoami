@@ -15,7 +15,7 @@ interface Props {
   title?: string;
   description?: string;
   type?: 'website' | 'article';
-  /** Loads /copy.js, which adds Copy buttons to code blocks. The only script on the site. */
+  /** Loads /copy.js, which adds Copy buttons and edge fades to code blocks. The only script on the site. */
   copyButtons?: boolean;
   /** For the 404 page: no canonical URL, and search engines are asked not to index it. */
   noindex?: boolean;
@@ -31,7 +31,7 @@ const hasWriteups = (await getWriteups()).length > 0;
 const sourceNote = `<!--
   Reading the source? Good instinct. No passwords in this comment.
   What you will find: no trackers, no third-party code, and a strict Content-Security-Policy.
-  The only script is /copy.js, the copy buttons on writeups. It's short; read it.
+  The only script is /copy.js, for the code blocks on writeups. It's short; read it.
   Every response in the home page's request panel is a real file: curl -i ${new URL('/whoami.json', Astro.site).href}
   Found a bug? ${new URL('/.well-known/security.txt', Astro.site).href}
 -->`;
@@ -72,7 +72,9 @@ const sourceNote = `<!--
     <header class="site-header">
       <div class="wrap header-inner">
         <a class="wordmark" href="/" aria-label={`${profile.handle}, home`}>
-          <span class="wordmark-mark" aria-hidden="true"></span>{profile.handle}
+          <span class="wordmark-icon" aria-hidden="true">
+            <svg viewBox="0 0 32 32" focusable="false"><path class="wm-chevron" d="M8.5 10.5 14 16l-5.5 5.5" /><path class="wm-cursor" d="M16.5 22h7" /></svg>
+          </span>{profile.handle}
         </a>
         <nav class="site-nav" aria-label="Main">
           <ul>

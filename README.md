@@ -2,7 +2,7 @@
 
 Source for [whoami.essible.workers.dev](https://whoami.essible.workers.dev): writeups and notes on penetration testing and web application security.
 
-Built with [Astro](https://astro.build). The output is static HTML and CSS, with no cookies or trackers, and the build sends no usage data (Astro and Wrangler telemetry are off). The only JavaScript is `public/copy.js`, which adds Copy buttons to code blocks on writeup pages.
+Built with [Astro](https://astro.build). The output is static HTML and CSS, with no cookies or trackers, and the build sends no usage data (Astro and Wrangler telemetry are off). The only JavaScript is `public/copy.js`, which adds Copy buttons to code blocks on writeup pages and fades the edge of a block while a long line runs past it.
 
 ## Run locally
 
@@ -53,7 +53,7 @@ The panel reads the same sources, so it always shows what the server sends.
   on writeups) use CSS scroll-driven animations. Browsers without them get the static version.
 - Moving between pages uses CSS view transitions where supported.
 - Visitors who prefer reduced motion get a still page: no entrance animations, parallax or page transitions.
-- Code blocks get a Copy button from `public/copy.js`, the one script on the site. It loads only on writeup pages, and without it the code can still be selected by hand.
+- Code blocks get a Copy button from `public/copy.js`, the one script on the site. It also fades the side of a block while code is hidden past it, so a long line that scrolls sideways doesn't look cut off. It loads only on writeup pages, and without it the code can still be selected and scrolled by hand.
 - The layout is tested from smartwatch width (about 160px) up to 4K screens.
 
 ## Deploy on Cloudflare

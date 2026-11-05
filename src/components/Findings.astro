@@ -1,5 +1,6 @@
 ---
 import { formatDate, isoDate, levelOf, readingMinutes, type Writeup } from '../lib/writeups';
+import KeepRanges from './KeepRanges.astro';
 
 interface Props {
   writeups: Writeup[];
@@ -24,7 +25,9 @@ const Heading = headingLevel;
           {w.data.draft && <span class="level level-draft">Draft</span>}
         </p>
         <Heading class="finding-title">
-          <a href={`/writeups/${w.id}/`}>{w.data.title}</a>
+          <a href={`/writeups/${w.id}/`}>
+            <KeepRanges text={w.data.title} />
+          </a>
         </Heading>
         <p class="finding-summary">{w.data.description}</p>
         {w.data.tags.length > 0 && (

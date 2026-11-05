@@ -1,0 +1,14 @@
+---
+/**
+ * Writes text so that a number range such as "0–33" stays on one line. Browsers may wrap
+ * after the dash, which leaves "0–" at the end of one line and "33" at the start of the next.
+ */
+interface Props {
+  text: string;
+}
+
+// split() with a capture group keeps the ranges: they are every second item.
+const parts = Astro.props.text.split(/(\d+–\d+)/);
+---
+
+{parts.map((part, i) => (i % 2 ? <span class="nowrap">{part}</span> : part))}

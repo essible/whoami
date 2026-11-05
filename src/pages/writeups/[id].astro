@@ -1,6 +1,7 @@
 ---
 import { render } from 'astro:content';
 import Base from '../../layouts/Base.astro';
+import KeepRanges from '../../components/KeepRanges.astro';
 import { profile } from '../../data/profile';
 import { formatDate, getWriteups, isoDate, levelOf, readingMinutes, type Writeup } from '../../lib/writeups';
 
@@ -32,7 +33,9 @@ const subject = encodeURIComponent(`About: ${title}`);
     <header class="page-head">
       <div class="wrap">
         <a class="back" href="/writeups/"><span aria-hidden="true">←</span> Writeups</a>
-        <h1 class="page-title">{title}</h1>
+        <h1 class="page-title">
+          <KeepRanges text={title} />
+        </h1>
         <p class="page-summary">{description}</p>
       </div>
     </header>
@@ -116,7 +119,9 @@ const subject = encodeURIComponent(`About: ${title}`);
                     <span class="pager-dir">
                       <span class="pager-arrow" aria-hidden="true">←</span> Newer
                     </span>
-                    <span class="pager-title">{newer.data.title}</span>
+                    <span class="pager-title">
+                      <KeepRanges text={newer.data.title} />
+                    </span>
                   </a>
                 )}
                 {older && (
@@ -124,7 +129,9 @@ const subject = encodeURIComponent(`About: ${title}`);
                     <span class="pager-dir">
                       Older <span class="pager-arrow" aria-hidden="true">→</span>
                     </span>
-                    <span class="pager-title">{older.data.title}</span>
+                    <span class="pager-title">
+                      <KeepRanges text={older.data.title} />
+                    </span>
                   </a>
                 )}
               </nav>

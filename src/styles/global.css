@@ -293,11 +293,40 @@ body::after {
   color: var(--text);
 }
 
-.wordmark-mark {
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 2px;
-  background: var(--accent);
+/* A small terminal badge with a red prompt (the same >_ as the favicon). */
+.wordmark-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--accent);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.25s;
+}
+
+.wordmark-icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.6;
+}
+
+.wm-chevron {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.wordmark:hover .wordmark-icon,
+.wordmark:focus-visible .wordmark-icon {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px -4px var(--glow);
 }
 
 .site-nav ul {
@@ -427,13 +456,14 @@ body::after {
   text-transform: uppercase;
 }
 
+/* Display titles (the name, "Not found", "Get in touch", the Now tile) share a light weight. */
 .handle {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(3rem, 11vw, 5.25rem);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: -0.07em;
+  letter-spacing: -0.05em;
 }
 
 .handle-small {
@@ -462,7 +492,7 @@ body::after {
 
 .caret {
   display: inline-block;
-  width: 0.5ch;
+  width: 0.42ch;
   height: 0.82em;
   margin-left: 0.12em;
   vertical-align: -0.05em;
@@ -559,6 +589,10 @@ body::after {
   font-family: var(--font-mono);
   font-size: clamp(0.71875rem, 0.6rem + 0.6vw, 0.8125rem);
   line-height: 1.7;
+}
+
+/* The panel's width decides the tab layout. A plain div is the container: every browser supports that. */
+.repeater-body {
   container-type: inline-size;
 }
 
@@ -571,23 +605,32 @@ body::after {
   pointer-events: none;
 }
 
-/* No scrolling here: a scroll box would become an extra keyboard stop. Narrow panels use two columns. */
+/*
+  Tabs share the row equally, with lines between them drawn by the 1px gaps. Each label has at
+  least 10px to spare at the widest-label width before the layout switches to two rows; if a
+  label still doesn't fit (very large text settings), it ends in "…" rather than being cut off.
+  No scrolling: a scroll box would become an extra keyboard stop.
+*/
 .ep-tabs {
-  display: flex;
-  overflow: hidden;
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 1px;
   border-bottom: 1px solid var(--code-line);
-  background: var(--code-bar);
+  background: var(--code-line);
 }
 
 .ep-tab {
   --on: 0;
   position: relative;
-  flex: none;
-  padding: 0.6rem 0.95rem;
-  border-right: 1px solid var(--code-line);
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.6rem 0.5rem;
   background: var(--code-bar);
   color: var(--code-muted);
   font-size: 0.75rem;
+  text-align: center;
+  text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
   -webkit-user-select: none;
@@ -774,18 +817,11 @@ body::after {
   color: var(--syn-method);
 }
 
-/* Narrow panels: the tabs form two columns instead of a row that would scroll. */
-@container (max-width: 30rem) {
+/* Narrower panels: two rows of two tabs. */
+@container (max-width: 31rem) {
   .ep-tabs {
-    display: grid;
+    grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1px;
-    background: var(--code-line);
-  }
-
-  .ep-tab {
-    border-right: 0;
-    text-align: center;
   }
 
   .ep-tab:last-child:nth-child(odd) {
@@ -824,9 +860,10 @@ body::after {
 
 .section-title {
   margin: 0;
+  font-family: var(--font-display);
   font-size: clamp(1.875rem, 4.5vw, 2.75rem);
-  font-weight: 600;
-  letter-spacing: -0.025em;
+  font-weight: 400;
+  letter-spacing: -0.04em;
 }
 
 .more {
@@ -860,8 +897,9 @@ body::after {
 
 .tile-label {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.25rem 0.55rem;
   margin: 0;
   color: var(--muted);
   font-family: var(--font-mono);
@@ -893,8 +931,8 @@ body::after {
   margin: 0.35rem 0 0;
   font-family: var(--font-display);
   font-size: clamp(2rem, 5vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.06em;
+  font-weight: 400;
+  letter-spacing: -0.045em;
   line-height: 1.05;
 }
 
@@ -1007,7 +1045,7 @@ progress::-moz-progress-bar {
   font-weight: 600;
 }
 
-/* Learning path: vertical on phones, a horizontal track on wider screens. */
+/* Learning path: vertical on phones and tablets, a horizontal track from 64rem (1024px) up. */
 
 .path {
   display: grid;
@@ -1145,8 +1183,8 @@ progress::-moz-progress-bar {
   margin: 0.25rem 0 0;
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 9vw, 4.75rem);
-  font-weight: 700;
-  letter-spacing: -0.07em;
+  font-weight: 400;
+  letter-spacing: -0.05em;
   line-height: 1;
 }
 
@@ -1251,8 +1289,10 @@ progress::-moz-progress-bar {
 
 .finding-title {
   margin: 0;
-  font-size: 1.1875rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
   line-height: 1.35;
 }
 
@@ -1327,10 +1367,11 @@ progress::-moz-progress-bar {
 .page-title {
   max-width: 48rem;
   margin: 0;
-  font-size: clamp(2.125rem, 5.5vw, 3.25rem);
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  line-height: 1.12;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4.2vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
 }
 
 .page-summary {
@@ -1458,7 +1499,9 @@ progress::-moz-progress-bar {
 }
 
 .pager-title {
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
   line-height: 1.35;
 }
 
@@ -1661,15 +1704,17 @@ progress::-moz-progress-bar {
 
 .prose h2 {
   margin: 2.5rem 0 0.75rem;
-  font-size: 1.4375rem;
-  font-weight: 600;
-  letter-spacing: -0.015em;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .prose h3 {
   margin: 2rem 0 0.5rem;
-  font-size: 1.1875rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 500;
 }
 
 .prose p,
@@ -1785,6 +1830,40 @@ progress::-moz-progress-bar {
   margin: 0;
 }
 
+/*
+  Fades at the sides of a block that scrolls sideways, so a line cut off at the edge reads as
+  "there's more", not as a clipped box. /copy.js turns each one on while code is hidden past it.
+*/
+.code-block::before,
+.code-block::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: calc(1px + var(--code-bar-h));
+  bottom: 1px;
+  width: 2.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.code-block::before {
+  left: 1px;
+  border-bottom-left-radius: 9px;
+  background: linear-gradient(to left, transparent, var(--code-bg) 85%);
+}
+
+.code-block::after {
+  right: 1px;
+  border-bottom-right-radius: 9px;
+  background: linear-gradient(to right, transparent, var(--code-bg) 85%);
+}
+
+.code-block.is-more-left::before,
+.code-block.is-more-right::after {
+  opacity: 1;
+}
+
 .copy-btn {
   position: absolute;
   top: 1px;
@@ -1848,6 +1927,9 @@ progress::-moz-progress-bar {
 
 .prose pre code {
   display: block;
+  /* As wide as the longest line, so scrolling to the end still leaves padding after it. */
+  width: max-content;
+  min-width: 100%;
   padding: 1rem 1.1rem;
   font-family: var(--font-mono);
 }
@@ -1983,6 +2065,10 @@ progress::-moz-progress-bar {
     grid-column: 1 / -1;
   }
 
+}
+
+/* The learning path runs across only when every step has room for its longest word. */
+@media (min-width: 64rem) {
   .path {
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
@@ -2125,7 +2211,7 @@ progress::-moz-progress-bar {
   }
 
   .section-title {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
   }
 
   .tile,
@@ -2139,7 +2225,7 @@ progress::-moz-progress-bar {
   }
 
   .finding-title {
-    font-size: 1rem;
+    font-size: 0.9375rem;
   }
 
   .contact-inner {
@@ -2161,15 +2247,15 @@ progress::-moz-progress-bar {
   }
 
   .page-title {
-    font-size: 1.375rem;
+    font-size: 1.125rem;
   }
 
   .prose h2 {
-    font-size: 1.1875rem;
+    font-size: 1.0625rem;
   }
 
   .prose h3 {
-    font-size: 1.0625rem;
+    font-size: 1rem;
   }
 
   .prose pre {
@@ -2178,6 +2264,11 @@ progress::-moz-progress-bar {
 
   .prose pre code {
     padding: 0.75rem 0.8rem;
+  }
+
+  .code-block::before,
+  .code-block::after {
+    width: 1.5rem;
   }
 }
 
@@ -2376,6 +2467,17 @@ progress::-moz-progress-bar {
     .spot-hits > div:has(> i:nth-child(26):hover) ~ .spot-light { --spot-x: 91.071%; }
     .spot-hits > div:has(> i:nth-child(27):hover) ~ .spot-light { --spot-x: 94.643%; }
     .spot-hits > div:has(> i:nth-child(28):hover) ~ .spot-light { --spot-x: 98.214%; }
+  }
+
+  /* The prompt steps forward and the cursor blinks, as if waiting for input. */
+  .wordmark:hover .wm-chevron,
+  .wordmark:focus-visible .wm-chevron {
+    transform: translateX(3px);
+  }
+
+  .wordmark:hover .wm-cursor,
+  .wordmark:focus-visible .wm-cursor {
+    animation: blink 0.9s steps(1) 3;
   }
 
   .button:hover .button-arrow {
@@ -2664,7 +2766,9 @@ progress::-moz-progress-bar {
   .hero-scan,
   .rail,
   .read-progress,
-  .copy-btn {
+  .copy-btn,
+  .code-block::before,
+  .code-block::after {
     display: none;
   }
 }
@@ -2790,13 +2894,14 @@ progress::-moz-progress-bar {
   from {
     opacity: 0;
     transform: translateY(0.2em);
-    font-weight: 200;
+    font-weight: 100;
   }
 }
 
+/* The light letters swell to bold and red as the wave passes. */
 @keyframes glyph-wave {
   45% {
-    font-weight: 200;
+    font-weight: 700;
     color: var(--accent);
   }
 }

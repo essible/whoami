@@ -22,6 +22,7 @@ const bytes = new Intl.NumberFormat('en');
 
 <Root class="repeater" aria-hidden={many ? undefined : 'true'}>
   {many && <legend class="sr-only">{label}</legend>}
+  <div class="repeater-body">
   {
     many && (
       <div class="ep-tabs">
@@ -68,5 +69,6 @@ const bytes = new Intl.NumberFormat('en');
         </>
       ))
     }
+  </div>
   </div>
 </Root>
