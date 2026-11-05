@@ -1,0 +1,3 @@
+# Language stats on GitHub: this is an Astro project. Its one large stylesheet
+# would otherwise outweigh everything else and label the repository as CSS.
+*.css linguist-detectable=false
