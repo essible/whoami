@@ -21,7 +21,7 @@ const statusLabel: Record<PathStatus, string> = {
 ---
 
 <Base>
-  <section class="hero has-spot" aria-labelledby="hero-title">
+  <section class="hero has-spot fill-screen" aria-labelledby="hero-title">
     <div class="hero-scan" aria-hidden="true"></div>
     <div class="wrap hero-inner">
       <div class="hero-copy">
@@ -71,12 +71,16 @@ const statusLabel: Record<PathStatus, string> = {
       </div>
       <Repeater host={Astro.site!.host} endpoints={endpoints} label="Requests to this site" />
     </div>
+    <a class="hero-next" href={writeups.length > 0 ? '#writeups' : '#progress'}>
+      <span class="sr-only">{writeups.length > 0 ? 'Next: latest writeups' : "Next: what I'm working on"}</span>
+      <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M16 8.5v14M10.5 17.5 16 23l5.5-5.5" /></svg>
+    </a>
     <Spotlight />
   </section>
 
   {
     writeups.length > 0 && (
-      <section class="section" id="writeups" aria-labelledby="writeups-title">
+      <section class="section fill-screen" id="writeups" aria-labelledby="writeups-title">
         <div class="wrap">
           <header class="section-head">
             <p class="section-path">
@@ -91,7 +95,7 @@ const statusLabel: Record<PathStatus, string> = {
     )
   }
 
-  <section class="section" id="progress" aria-labelledby="progress-title">
+  <section class="section fill-screen" id="progress" aria-labelledby="progress-title">
     <div class="wrap">
       <header class="section-head">
         <p class="section-path"><span aria-hidden="true">/</span>progress</p>
@@ -184,7 +188,7 @@ const statusLabel: Record<PathStatus, string> = {
     </div>
   </section>
 
-  <section class="contact-band has-spot" id="contact" aria-labelledby="contact-title">
+  <section class="contact-band has-spot fill-screen" id="contact" aria-labelledby="contact-title">
     <div class="wrap contact-inner">
       <p class="section-path"><span aria-hidden="true">/</span>contact</p>
       <h2 id="contact-title" class="contact-title"><Glyphs text="Get in touch" /></h2>

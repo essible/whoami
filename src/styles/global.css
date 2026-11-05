@@ -378,6 +378,79 @@ body::after {
   border-bottom: 1px solid var(--line);
 }
 
+/*
+  Each part of the home page fills at least the screen below the header: the first screen is
+  the hero alone, and a jump from the menu shows one section, not the start of the next one.
+  Longer parts simply run on. Content sits in the middle of its screen; browsers without
+  align-content on blocks keep it at the top. svh is the screen with the address bar shown.
+*/
+.fill-screen {
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
+  align-content: center;
+}
+
+/* The hero starts above the page (by its bleed minus the header), so it needs that much more. */
+.hero.fill-screen {
+  min-height: calc(100vh + var(--bleed) - var(--header-h));
+  min-height: calc(100svh + var(--bleed) - var(--header-h));
+}
+
+/*
+  A way down at the bottom of the first screen: with the hero filling the screen, nothing else
+  shows that the page goes on. Only where the hero is side by side and fits on the first screen.
+*/
+.hero-next {
+  display: none;
+}
+
+/* Narrower side-by-side heroes are taller, so they need a taller screen. */
+@media (min-width: 64rem) and (min-height: 45rem), (min-width: 60rem) and (min-height: 50rem) {
+  .hero-next {
+    position: absolute;
+    bottom: 1.25rem;
+    left: 50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--muted);
+    translate: -50% 0;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.25s,
+      color 0.2s;
+  }
+}
+
+@media (min-width: 60rem) and (min-height: 50rem) {
+  .hero-next {
+    bottom: 1.75rem;
+  }
+}
+
+.hero-next svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.6;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hero-next:hover,
+.hero-next:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px -4px var(--glow);
+  color: var(--accent);
+}
+
 /* Pointer spotlight (desktop only, see the motion section). Registered so its position can glide. */
 @property --spot-x {
   syntax: '<percentage>';
@@ -2484,6 +2557,16 @@ progress::-moz-progress-bar {
     transform: translateX(3px);
   }
 
+  /* The way-down arrow nudges twice after the intro (done within 5 seconds), and steps down on hover. */
+  .hero-next svg {
+    animation: nudge-down 1.2s ease-in-out 2.2s 2;
+  }
+
+  .hero-next:hover svg,
+  .hero-next:focus-visible svg {
+    transform: translateY(3px);
+  }
+
   .button:hover .button-arrow.is-down {
     transform: translateY(2px);
   }
@@ -2766,16 +2849,29 @@ progress::-moz-progress-bar {
   .hero-scan,
   .rail,
   .read-progress,
+  .hero-next,
   .copy-btn,
   .code-block::before,
   .code-block::after {
     display: none;
+  }
+
+  /* On paper a screen-tall section would be a mostly empty page. */
+  .fill-screen,
+  .hero.fill-screen {
+    min-height: 0;
   }
 }
 
 @keyframes blink {
   50% {
     opacity: 0;
+  }
+}
+
+@keyframes nudge-down {
+  50% {
+    transform: translateY(4px);
   }
 }
 
