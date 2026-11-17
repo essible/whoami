@@ -45,8 +45,8 @@ export const path: PathItem[] = [
     platform: 'PortSwigger Web Security Academy',
     url: 'https://portswigger.net/web-security/sql-injection',
     status: 'active',
-    detail: 'About half of the labs',
-    value: 50,
+    detail: '25 of 51 lessons and labs',
+    value: 49,
   },
   {
     name: 'Authentication',
